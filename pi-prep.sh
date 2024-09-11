@@ -54,7 +54,7 @@ check_install_pydualsense() {
     # if not installed, install it
     if [ $? -ne 0 ]; then
         echo "pydualsense is not installed. Installing..."
-        pip install --upgrade pydualsense
+        sudo pip install --upgrade pydualsense
     fi
 }
 
