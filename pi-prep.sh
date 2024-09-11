@@ -5,8 +5,6 @@
 check_usb() {
     echo "Checking connected USB devices..."
     lsusb
-    echo "USB device list saved to usb_devices.txt"
-    lsusb > usb_devices.txt
 }
 
 # Function to check internet connection
