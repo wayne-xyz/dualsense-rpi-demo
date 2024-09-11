@@ -73,7 +73,8 @@ check_install_pydualsense() {
 test_connection() {
     source ~/pydualsense_env/bin/activate
     echo "Testing connection to the PS5 controller..."
-    python -m pydualsense
+    # run the ds-test.py
+    python ~/ds-test.py
     echo "Connection test complete."
     deactivate
 }
