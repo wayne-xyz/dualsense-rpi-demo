@@ -1,5 +1,5 @@
 #!/bin/bash
-# Check USB devices and internet connection
+# check the ps5 controller connection
 
 # Function to check USB devices
 check_usb() {
