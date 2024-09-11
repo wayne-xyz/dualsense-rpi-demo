@@ -8,9 +8,11 @@ def test_connection():
     ds.init()
 
     print("Vibrting 3 seconds...")
-    ds.set_vibration(0.5,0.5)
+    ds.setLeftMotor(100)
+    ds.setRightMotor(100)
     time.sleep(3)
-    ds.set_vibration(0,0)
+    ds.setLeftMotor(0)
+    ds.setRightMotor(0)
 
 
     print("led test 3 seconds...    ")
