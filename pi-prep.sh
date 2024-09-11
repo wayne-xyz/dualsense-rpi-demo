@@ -65,6 +65,6 @@ check_usb
 check_internet
 check_python
 check_kernel
-check_install_libhidapi
 add_rule
+check_install_libhidapi
 check_install_pydualsense
