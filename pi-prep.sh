@@ -69,14 +69,9 @@ check_install_pydualsense() {
 }
 
 
-# test the connection to the PS5 controller
-test_connection() {
+# activate the virtual environment
+activate_venv() {
     source ~/pydualsense_env/bin/activate
-    echo "Testing connection to the PS5 controller..."
-    # run the ds-test.py
-    python ds-test.py
-    echo "Connection test complete."
-    deactivate
 }
 
 # Execute all
@@ -87,7 +82,7 @@ check_kernel
 add_rule
 check_install_libhidapi
 check_install_pydualsense
-test_connection
+activate_venv
 
 
 

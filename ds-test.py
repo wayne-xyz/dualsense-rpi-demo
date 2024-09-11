@@ -16,18 +16,18 @@ def test_connection():
 
 
     print("led test 3 seconds...    ")
-    ds.set_led(255,0,0)
+    ds.setLED(255,0,0)
     time.sleep(3)
-    ds.set_led(0,255,0)
+    ds.setLED(0,255,0)
     time.sleep(3)
-    ds.set_led(0,0,255)
+    ds.setLED(0,0,255)
     time.sleep(3)
-    ds.set_led(0,0,0)
+    ds.setLED(0,0,0)
     print("led test complete.")
 
 
     print("Battery test...")
-    print("Battery level: ",ds.get_battery())
+    print("Battery level: ",ds.battery_level)
     print("Battery test complete.")
 
     print("Connection test complete.")
