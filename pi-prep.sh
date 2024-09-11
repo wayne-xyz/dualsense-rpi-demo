@@ -50,10 +50,13 @@ check_install_libhidapi() {
 
 check_install_pydualsense() {
     echo "Checking if pydualsense is installed..."
-    if ! dpkg -l | grep -q python3-pydualsense; then
-        echo "pydualsense is not installed. Installing..."
-        sudo apt update
-        sudo apt install -y python3-pydualsense
+    if ! python3 -c "import pydualsense" &> /dev/null; then
+        echo "pydualsense is not installed. Installing in a virtual environment..."
+        python3 -m venv ~/pydualsense_env
+        source ~/pydualsense_env/bin/activate
+        pip install pydualsense
+        deactivate
+        echo "pydualsense installed in ~/pydualsense_env. Activate with 'source ~/pydualsense_env/bin/activate'"
     else
         echo "pydualsense is already installed."
     fi
