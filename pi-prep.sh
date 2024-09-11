@@ -50,11 +50,12 @@ check_install_libhidapi() {
 
 check_install_pydualsense() {
     echo "Checking if pydualsense is installed..."
-    pip list | grep pydualsense
-    # if not installed, install it
-    if [ $? -ne 0 ]; then
+    if ! dpkg -l | grep -q python3-pydualsense; then
         echo "pydualsense is not installed. Installing..."
-        sudo pip install --upgrade pydualsense
+        sudo apt update
+        sudo apt install -y python3-pydualsense
+    else
+        echo "pydualsense is already installed."
     fi
 }
 
