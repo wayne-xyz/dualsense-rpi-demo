@@ -50,19 +50,31 @@ check_install_libhidapi() {
 
 check_install_pydualsense() {
     echo "Checking if pydualsense is installed..."
-    if ! python3 -c "import pydualsense" &> /dev/null; then
-        echo "pydualsense is not installed. Installing in a virtual environment..."
-        python3 -m venv ~/pydualsense_env
+    if [ -d ~/pydualsense_env ]; then
         source ~/pydualsense_env/bin/activate
-        pip install pydualsense
+        if python3 -c "import pydualsense" &> /dev/null; then
+            echo "pydualsense is already installed in the virtual environment."
+            deactivate
+            return
+        fi
         deactivate
-        echo "pydualsense installed in ~/pydualsense_env. Activate with 'source ~/pydualsense_env/bin/activate'"
-    else
-        echo "pydualsense is already installed."
     fi
+    
+    echo "pydualsense is not installed or not in a virtual environment. Installing in a virtual environment..."
+    python3 -m venv ~/pydualsense_env
+    source ~/pydualsense_env/bin/activate
+    pip install pydualsense
+    deactivate
+    echo "pydualsense installed in ~/pydualsense_env. Activate with 'source ~/pydualsense_env/bin/activate'"
 }
 
 
+# test the connection to the PS5 controller
+test_connection() {
+    echo "Testing connection to the PS5 controller..."
+    python3 -m pydualsense
+    echo "Connection test complete."
+}
 
 # Execute all
 check_usb
@@ -72,3 +84,7 @@ check_kernel
 add_rule
 check_install_libhidapi
 check_install_pydualsense
+test_connection
+
+
+
