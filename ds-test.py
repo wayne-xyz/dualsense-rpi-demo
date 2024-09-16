@@ -9,7 +9,7 @@ def test_connection():
         print(f"0x{device['vendor_id']:04x}:0x{device['product_id']:04x} {device['product_string']}")
 
     print("Testing connection to the PS5 controller...")
-    ds=pydualsense()
+    ds = pydualsense()
     ds.init()
 
     print("Vibrating 3 seconds...")
@@ -18,7 +18,6 @@ def test_connection():
     time.sleep(3)
     ds.setLeftMotor(0)
     ds.setRightMotor(0)
-
 
     print("LED test 3 seconds...")
     # Updated LED control
@@ -31,12 +30,16 @@ def test_connection():
     ds.light.setColorI(0, 0, 0)    # Off
     print("LED test complete.")
 
-
     print("Battery test...")
-    print("Battery level: ",ds.battery_level)
+    # Updated battery level check
+    ds.state.battery = ds.getState().battery
+    print("Battery level: ", ds.state.battery)
     print("Battery test complete.")
 
     print("Connection test complete.")
+
+    # Close the connection
+    ds.close()
 
 test_connection()
 
