@@ -32,7 +32,6 @@ def test_connection():
 
     print("Battery test...")
     # Updated battery level check
-    ds.state.battery = ds.getState().battery
     print("Battery level: ", ds.state.battery)
     print("Battery test complete.")
 
