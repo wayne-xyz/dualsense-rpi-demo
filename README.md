@@ -15,3 +15,11 @@ Demos for Dualsense controller and Raspberry Pi 3B+
 - Raspberry Pi OS Lite (64-bit)
 
 - [pydualsense](https://github.com/flok/pydualsense)
+
+# Environment
+## pydualsense_env
+
+activate the environment
+```
+source pydualsense_env/bin/activate
+```

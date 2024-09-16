@@ -1,8 +1,13 @@
 from pydualsense import pydualsense,TriggerModes
 import time
+import hid
 
 
 def test_connection():
+    print("Listing available HID devices...")
+    for device in hid.enumerate():
+        print(f"0x{device['vendor_id']:04x}:0x{device['product_id']:04x} {device['product_string']}")
+
     print("Testing connection to the PS5 controller...")
     ds=pydualsense()
     ds.init()
