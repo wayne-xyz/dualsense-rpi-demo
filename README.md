@@ -28,5 +28,5 @@ source pydualsense_env/bin/activate
 
 ## use full path to the python interpreter in virtual environment with sudo
 ```
-   sudo /home/pi/pydualsense_env/bin/python ds-test.py
+sudo /home/pi/pydualsense_env/bin/python ds-test.py
 ``` 

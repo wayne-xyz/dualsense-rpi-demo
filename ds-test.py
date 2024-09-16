@@ -30,12 +30,10 @@ def test_connection():
     ds.light.setColorI(0, 0, 0)    # Off
     print("LED test complete.")
 
-    print("Battery test...")
-    # Updated battery level check
-    print("Battery level: ", ds.state.battery_level)
-    print("Battery test complete.")
 
-    print("Connection test complete.")
+
+
+
 
     # Close the connection
     ds.close()
