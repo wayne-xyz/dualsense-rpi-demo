@@ -19,7 +19,14 @@ Demos for Dualsense controller and Raspberry Pi 3B+
 # Environment
 ## pydualsense_env
 
+
+# use the ds-test.py
 activate the environment
 ```
 source pydualsense_env/bin/activate
 ```
+
+## use full path to the python interpreter in virtual environment with sudo
+```
+   sudo /home/pi/pydualsense_env/bin/python ds-test.py
+``` 
