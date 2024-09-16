@@ -32,7 +32,7 @@ def test_connection():
 
     print("Battery test...")
     # Updated battery level check
-    print("Battery level: ", ds.state.battery)
+    print("Battery level: ", ds.state.battery_level)
     print("Battery test complete.")
 
     print("Connection test complete.")
