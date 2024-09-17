@@ -39,6 +39,19 @@ def test_connection():
     ds.setRightMotor(0)
 
 
+    print("trigger test ")
+        # set left l2 trigger to Rigid and set index 1 to force 255
+    ds.triggerL.setMode(TriggerModes.Rigid)
+    ds.triggerL.setForce(1, 255)
+
+    # set left r2 trigger to Rigid
+    ds.triggerR.setMode(TriggerModes.Pulse_A)
+    ds.triggerR.setForce(0, 200)
+    ds.triggerR.setForce(1, 255)
+    ds.triggerR.setForce(2, 175)
+
+
+
     # Close the connection
     ds.close()
 
