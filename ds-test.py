@@ -42,5 +42,49 @@ def test_connection():
     # Close the connection
     ds.close()
 
+
+
+
+def print_dualsense_state():
+    # Get DualSense instance and initialize
+    dualsense = pydualsense()
+    dualsense.init()
+
+    print('DualSense State Monitoring started. Press R1 to exit.')
+
+    # Loop until the R1 button is pressed
+    try:
+        while not dualsense.state.R1:
+            # Accessing various states
+            print(f"Left Stick: X={dualsense.state.LX}, Y={dualsense.state.LY}")
+            print(f"Right Stick: X={dualsense.state.RX}, Y={dualsense.state.RY}")
+            print(f"Buttons: Triangle={dualsense.state.Triangle}, Square={dualsense.state.Square}, Circle={dualsense.state.Circle}, Cross={dualsense.state.Cross}")
+            print(f"Triggers: L2={dualsense.state.L2}, R2={dualsense.state.R2}")
+            print(f"Rumble: Left Motor={dualsense.state.leftMotor}, Right Motor={dualsense.state.rightMotor}")
+
+            # Print whether specific buttons are pressed
+            if dualsense.state.DpadUp:
+                print("D-Pad Up Pressed")
+            if dualsense.state.DpadDown:
+                print("D-Pad Down Pressed")
+            if dualsense.state.DpadLeft:
+                print("D-Pad Left Pressed")
+            if dualsense.state.DpadRight:
+                print("D-Pad Right Pressed")
+                
+            print("-" * 40)
+
+    except KeyboardInterrupt:
+        pass  # Allow exit with Ctrl+C
+
+    finally:
+        # Close the controller connection
+        dualsense.close()
+
+
+
+
+
 test_connection()
 
+print_dualsense_state()
