@@ -50,6 +50,9 @@ def test_connection():
     ds.triggerR.setForce(1, 255)
     ds.triggerR.setForce(2, 175)
 
+    while not ds.state.R1:
+        print("start triger ")
+        time.sleep(1)
 
 
     # Close the connection
@@ -98,4 +101,4 @@ def print_dualsense_state():
 
 test_connection()
 
-print_dualsense_state()
+#print_dualsense_state()
