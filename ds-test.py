@@ -59,7 +59,6 @@ def print_dualsense_state():
             print(f"Left Stick: X={dualsense.state.LX}, Y={dualsense.state.LY}")
             print(f"Right Stick: X={dualsense.state.RX}, Y={dualsense.state.RY}")
             print(f"Triggers: L2={dualsense.state.L2}, R2={dualsense.state.R2}")
-            print(f"Rumble: Left Motor={dualsense.state.leftMotor}, Right Motor={dualsense.state.rightMotor}")
 
             # Print whether specific buttons are pressed
             if dualsense.state.DpadUp:
