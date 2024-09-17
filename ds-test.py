@@ -31,8 +31,12 @@ def test_connection():
     print("LED test complete.")
 
 
-
-
+    print("Viberating 3 seconds.. in different force lever for left and right motor")
+    ds.setLeftMotor(100)
+    ds.setRightMotor(255)
+    time.sleep(3)
+    ds.setLeftMotor(0)
+    ds.setRightMotor(0)
 
 
     # Close the connection
