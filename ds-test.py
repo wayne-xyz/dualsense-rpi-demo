@@ -58,7 +58,6 @@ def print_dualsense_state():
             # Accessing various states
             print(f"Left Stick: X={dualsense.state.LX}, Y={dualsense.state.LY}")
             print(f"Right Stick: X={dualsense.state.RX}, Y={dualsense.state.RY}")
-            print(f"Buttons: Triangle={dualsense.state.Triangle}, Square={dualsense.state.Square}, Circle={dualsense.state.Circle}, Cross={dualsense.state.Cross}")
             print(f"Triggers: L2={dualsense.state.L2}, R2={dualsense.state.R2}")
             print(f"Rumble: Left Motor={dualsense.state.leftMotor}, Right Motor={dualsense.state.rightMotor}")
 
