@@ -1,6 +1,27 @@
 <html>
 <head>
 <title>DualSense Explorer</title>
+<style>
+.button, .stick-base, .trigger {
+    transition: fill 0.2s, stroke-width 0.2s;
+}
+.button.pressed, .stick-base.pressed, .trigger.pressed {
+    fill: #ff6b6b;
+    stroke: #ff0000;
+    stroke-width: 3;
+}
+@media (max-width: 768px) {
+  .controller-wrapper {
+    width: 50vw; /* Larger on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .controller-wrapper {
+    width: 80vw; /* Even larger on very small screens */
+  }
+}
+</style>
 </head>
 <body>
 <h1>DualSense Explorer</h1>
@@ -25,6 +46,56 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
 <hr />
 <h3>Input report</h3>
 <textarea id="inputreport" cols="48" rows="6" disabled></textarea><br />
+
+<div class="controller-wrapper" style="width: 20vw; margin: 0 auto;">
+  <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto;">
+    <!-- Controller body -->
+    <path d="M100,100 Q100,50 150,50 H650 Q700,50 700,100 V400 Q700,450 650,450 H150 Q100,450 100,400 Z" fill="#white" stroke="#000" stroke-width="4"/>
+    
+
+    <!-- D-pad -->
+    <rect id="dpad-up" class="button" x="220" y="230" width="60" height="20" rx="5" fill="#333"/>
+    <rect id="dpad-right" class="button" x="280" y="250" width="20" height="60" rx="5" fill="#333"/>
+    <rect id="dpad-down" class="button" x="220" y="300" width="60" height="20" rx="5" fill="#333"/>
+    <rect id="dpad-left" class="button" x="200" y="250" width="20" height="60" rx="5" fill="#333"/>
+    
+    <!-- Action buttons -->
+    <circle id="button-triangle" class="button" cx="550" cy="200" r="20" fill="#00ff00"/>
+    <circle id="button-circle" class="button" cx="600" cy="250" r="20" fill="#ff0000"/>
+    <circle id="button-cross" class="button" cx="550" cy="300" r="20" fill="#0000ff"/>
+    <circle id="button-square" class="button" cx="500" cy="250" r="20" fill="#ff00ff"/>
+    
+    <!-- Shoulder buttons and triggers -->
+    <rect id="button-l1" class="button" x="150" y="20" width="100" height="30" rx="15" fill="#666"/>
+    <rect id="button-r1" class="button" x="550" y="20" width="100" height="30" rx="15" fill="#666"/>
+    <path id="trigger-l2" class="trigger" d="M150,10 Q200,-10 250,10 V40 Q200,60 150,40 Z" fill="#888"/>
+    <path id="trigger-r2" class="trigger" d="M550,10 Q600,-10 650,10 V40 Q600,60 550,40 Z" fill="#888"/>
+    
+    <!-- Center buttons -->
+    <rect id="button-touchpad" class="button" x="300" y="100" width="200" height="100" rx="10" fill="#ddd"/>
+    <circle id="button-ps" class="button" cx="400" cy="250" r="15" fill="#777"/>
+    <rect id="button-create" class="button" x="340" y="280" width="40" height="20" rx="5" fill="#999"/>
+    <rect id="button-options" class="button" x="420" y="280" width="40" height="20" rx="5" fill="#999"/>
+    <circle id="button-mute" class="button" cx="400" cy="320" r="10" fill="#999"/>
+    
+    <g id="stick-left" transform="translate(300, 350)">
+      <circle id="button-l3" class="button stick" cx="0" cy="0" r="30" fill="#333"/>
+    </g>
+
+    <g id="stick-right" transform="translate(500, 350)">
+      <circle id="button-r3" class="button stick" cx="0" cy="0" r="30" fill="#333"/>
+    </g>
+    <!-- Labels -->
+    <text x="550" y="200" font-size="24" text-anchor="middle" fill="#fff">▲</text>
+    <text x="610" y="255" font-size="24" text-anchor="middle" fill="#fff">●</text>
+    <text x="550" y="305" font-size="24" text-anchor="middle" fill="#fff">✕</text>
+    <text x="490" y="255" font-size="24" text-anchor="middle" fill="#fff">■</text>
+    <text x="340" y="295" font-size="14" text-anchor="middle" fill="#fff">CREATE</text>
+    <text x="460" y="295" font-size="14" text-anchor="middle" fill="#fff">OPTIONS</text>
+  </svg>
+</div>
+
+
 
 <input type="checkbox" id="buttoncross" class="cb-disabled" disabled>Cross button</input><br />
 <input type="checkbox" id="buttoncircle" disabled>Circle button</input><br />
@@ -109,6 +180,9 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
 <input type="text" id="r2effectparam5" style="text-align:right; width:50;" />R2 trigger effect parameter 5<br />
 <input type="text" id="r2effectparam6" style="text-align:right; width:50;" />R2 trigger effect parameter 6<br />
 <input type="text" id="r2effectparam7" style="text-align:right; width:50;" />R2 trigger effect parameter 7<br />
+
+
+
 <script>
 const VENDOR_ID_SONY = 0x054c;
 const PRODUCT_ID_DUAL_SENSE = 0x0ce6;
