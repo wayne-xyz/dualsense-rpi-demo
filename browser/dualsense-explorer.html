@@ -10,6 +10,23 @@
     stroke: #ff0000;
     stroke-width: 3;
 }
+.flex-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center; /* This vertically centers the items */
+    justify-content: flex-start; /* This aligns items to the start of the container */
+    flex-wrap: nowrap; /* This prevents items from wrapping to the next line */
+  }
+
+  /* If you want some space between the items */
+  .flex-container > * {
+    margin-right: 10px; /* Adjust this value as needed */
+  }
+
+  /* Remove margin from the last item to avoid extra space at the end */
+  .flex-container > *:last-child {
+    margin-right: 0;
+  }
 @media (max-width: 768px) {
   .controller-wrapper {
     width: 50vw; /* Larger on smaller screens */
@@ -47,7 +64,9 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
 <h3>Input report</h3>
 <textarea id="inputreport" cols="48" rows="6" disabled></textarea><br />
 
-<div class="controller-wrapper" style="width: 20vw; margin: 0 auto;">
+<!-- this graphic line oriented is horizontal -->
+<div class="Graphic line horizontal flex-container" >
+<div class="controller-wrapper" style="width: 20vw;  margin-left: 20px;">
   <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto;">
     <!-- Controller body -->
     <path d="M100,100 Q100,50 150,50 H650 Q700,50 700,100 V400 Q700,450 650,450 H150 Q100,450 100,400 Z" fill="#white" stroke="#000" stroke-width="4"/>
@@ -66,8 +85,8 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
     <circle id="button-square" class="button" cx="500" cy="250" r="20" fill="#ff00ff"/>
     
     <!-- Shoulder buttons and triggers -->
-    <rect id="button-l1" class="button" x="150" y="20" width="100" height="30" rx="15" fill="#666"/>
-    <rect id="button-r1" class="button" x="550" y="20" width="100" height="30" rx="15" fill="#666"/>
+    <rect id="button-l1" class="button" x="250" y="20" width="100" height="30" rx="15" fill="#666"/>
+    <rect id="button-r1" class="button" x="450" y="20" width="100" height="30" rx="15" fill="#666"/>
     <path id="trigger-l2" class="trigger" d="M150,10 Q200,-10 250,10 V40 Q200,60 150,40 Z" fill="#888"/>
     <path id="trigger-r2" class="trigger" d="M550,10 Q600,-10 650,10 V40 Q600,60 550,40 Z" fill="#888"/>
     
@@ -93,6 +112,11 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
     <text x="340" y="295" font-size="14" text-anchor="middle" fill="#fff">CREATE</text>
     <text x="460" y="295" font-size="14" text-anchor="middle" fill="#fff">OPTIONS</text>
   </svg>
+</div>
+
+<canvas id="Gyroscope" width="400" height="400"></canvas>
+<canvas id="Accelerometer" width="400" height="400"></canvas>
+
 </div>
 
 
@@ -182,7 +206,7 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
 <input type="text" id="r2effectparam7" style="text-align:right; width:50;" />R2 trigger effect parameter 7<br />
 
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.js"></script>
 <script>
 const VENDOR_ID_SONY = 0x054c;
 const PRODUCT_ID_DUAL_SENSE = 0x0ce6;
@@ -286,6 +310,49 @@ const r2EffectParam4Text = document.getElementById('r2effectparam4');
 const r2EffectParam5Text = document.getElementById('r2effectparam5');
 const r2EffectParam6Text = document.getElementById('r2effectparam6');
 const r2EffectParam7Text = document.getElementById('r2effectparam7');
+
+
+// Initialize the Chart.js charts
+const ctxGyroscope = document.getElementById('Gyroscope').getContext('2d');
+const ctxAccelerometer = document.getElementById('Accelerometer').getContext('2d');
+
+const gyroscopeChart = new Chart(ctxGyroscope, {
+    type: 'line',
+    data: {
+        labels: [], // Will be filled with timestamps
+        datasets: [
+            { label: 'Gyro X', data: [], borderColor: 'red', fill: false },
+            { label: 'Gyro Y', data: [], borderColor: 'green', fill: false },
+            { label: 'Gyro Z', data: [], borderColor: 'blue', fill: false }
+        ]
+    },
+    options: {
+        scales: {
+            x: { type: 'linear', position: 'bottom' },
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+const accelerometerChart = new Chart(ctxAccelerometer, {
+    type: 'line',
+    data: {
+        labels: [], // Will be filled with timestamps
+        datasets: [
+            { label: 'Accel X', data: [], borderColor: 'red', fill: false },
+            { label: 'Accel Y', data: [], borderColor: 'green', fill: false },
+            { label: 'Accel Z', data: [], borderColor: 'blue', fill: false }
+        ]
+    },
+    options: {
+        scales: {
+            x: { type: 'linear', position: 'bottom' },
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+
 
 const hex8 = value => { return ('00' + (value >>> 0).toString(16)).substr(-2); };
 const hex16 = value => { return ('0000' + (value >>> 0).toString(16)).substr(-4); };
@@ -652,7 +719,54 @@ class DualSenseHid {
     batteryChargingCheckbox.checked = batteryCharging;
     batteryFullCheckbox.checked = batteryFull;
     batteryLevelText.value = batteryLevelPercent + '%';
+
+
+    
+            // Update SVG color based on button state
+    document.getElementById("button-cross").setAttribute("fill", cross ? "#00f" : "#333");
+    document.getElementById("button-circle").setAttribute("fill", circle ? "#f00" : "#333");
+    document.getElementById("button-square").setAttribute("fill", square ? "#f0f" : "#333");
+    document.getElementById("button-triangle").setAttribute("fill", triangle ? "#0f0" : "#333");
+
+    document.getElementById("button-l1").setAttribute("fill", l1 ? "#999" : "#666");
+    document.getElementById("button-r1").setAttribute("fill", r1 ? "#999" : "#666");
+    document.getElementById("trigger-l2").setAttribute("fill", l2 ? "#bbb" : "#888");
+    document.getElementById("trigger-r2").setAttribute("fill", r2 ? "#bbb" : "#888");
+
+    document.getElementById("dpad-up").setAttribute("fill", up ? "#fff" : "#333");
+    document.getElementById("dpad-down").setAttribute("fill", down ? "#fff" : "#333");
+    document.getElementById("dpad-left").setAttribute("fill", left ? "#fff" : "#333");
+    document.getElementById("dpad-right").setAttribute("fill", right ? "#fff" : "#333");
+
+    document.getElementById("button-ps").setAttribute("fill", ps ? "#aaa" : "#777");
+    document.getElementById("button-touchpad").setAttribute("fill", touchpad ? "#bbb" : "#ddd");
+    document.getElementById("button-mute").setAttribute("fill", mute ? "#bbb" : "#ddd");
+    document.getElementById("button-create").setAttribute("fill", create ? "#ccc" : "#999");
+    document.getElementById("button-options").setAttribute("fill", options ? "#ccc" : "#999");
+
+    document.getElementById("button-l3").setAttribute("fill", l3 ? "#666" : "#333");
+    document.getElementById("button-r3").setAttribute("fill", r3 ? "#666" : "#333");
+
+    
   }
+
+  // Update function to handle chart updates
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
   handleBluetoothInputReport01(report) {
     if (report.byteLength != DUAL_SENSE_BT_INPUT_REPORT_0x01_SIZE)
@@ -740,8 +854,8 @@ class DualSenseHid {
   
   handleBluetoothInputReport31(report) {
     if (report.byteLength != DUAL_SENSE_BT_INPUT_REPORT_0x31_SIZE)
-    	return;
 
+      return;
 		// byte 0?
     let axes0 = report.getUint8(1);
     let axes1 = report.getUint8(2);
