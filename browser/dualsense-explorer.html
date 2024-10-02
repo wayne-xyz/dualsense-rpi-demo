@@ -65,7 +65,7 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
 <textarea id="inputreport" cols="48" rows="6" disabled></textarea><br />
 
 <!-- this graphic line oriented is horizontal -->
-<div class="Graphic line horizontal flex-container" >
+<div class="Graphic line horizontal " >
 <div class="controller-wrapper" style="width: 20vw;  margin-left: 20px;">
   <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto;">
     <!-- Controller body -->
@@ -114,11 +114,14 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
   </svg>
 </div>
 
-<canvas id="Gyroscope" width="400" height="400"></canvas>
-<canvas id="Accelerometer" width="400" height="400"></canvas>
-
 </div>
 
+
+<div id="chart-container" class="flex-container" style="width: 400px; height: 400px;">
+    <canvas id="Gyroscope" width="200" height="200"></canvas>
+    <canvas id="Accelerometer" width="200" height="200"></canvas>
+    <canvas id="Triggers" width="200" height="200"></canvas>
+</div>
 
 
 <input type="checkbox" id="buttoncross" class="cb-disabled" disabled>Cross button</input><br />
@@ -206,7 +209,8 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
 <input type="text" id="r2effectparam7" style="text-align:right; width:50;" />R2 trigger effect parameter 7<br />
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const VENDOR_ID_SONY = 0x054c;
 const PRODUCT_ID_DUAL_SENSE = 0x0ce6;
@@ -313,22 +317,26 @@ const r2EffectParam7Text = document.getElementById('r2effectparam7');
 
 
 // Initialize the Chart.js charts
+// MARK: Chart 
 const ctxGyroscope = document.getElementById('Gyroscope').getContext('2d');
 const ctxAccelerometer = document.getElementById('Accelerometer').getContext('2d');
-
+const ctxTriggers = document.getElementById('Triggers').getContext('2d');
 const gyroscopeChart = new Chart(ctxGyroscope, {
     type: 'line',
     data: {
         labels: [], // Will be filled with timestamps
         datasets: [
-            { label: 'Gyro X', data: [], borderColor: 'red', fill: false },
-            { label: 'Gyro Y', data: [], borderColor: 'green', fill: false },
-            { label: 'Gyro Z', data: [], borderColor: 'blue', fill: false }
+            { label: 'Gyro X', data: [], borderColor: 'red', fill: false , pointRadius: 0},
+            { label: 'Gyro Y', data: [], borderColor: 'green', fill: false , pointRadius: 0},
+            { label: 'Gyro Z', data: [], borderColor: 'blue', fill: false , pointRadius: 0}
         ]
     },
     options: {
+        animation: {
+            duration: 0
+        },
         scales: {
-            x: { type: 'linear', position: 'bottom' },
+            x: { type: 'linear', position: 'bottom',ticks:{maxTicksLimit: 1000} },
             y: { beginAtZero: true }
         }
     }
@@ -339,12 +347,32 @@ const accelerometerChart = new Chart(ctxAccelerometer, {
     data: {
         labels: [], // Will be filled with timestamps
         datasets: [
-            { label: 'Accel X', data: [], borderColor: 'red', fill: false },
-            { label: 'Accel Y', data: [], borderColor: 'green', fill: false },
-            { label: 'Accel Z', data: [], borderColor: 'blue', fill: false }
+            { label: 'Accel X', data: [], borderColor: 'red', fill: false , pointRadius: 0},
+            { label: 'Accel Y', data: [], borderColor: 'green', fill: false , pointRadius: 0},
+            { label: 'Accel Z', data: [], borderColor: 'blue', fill: false , pointRadius: 0}
         ]
     },
     options: {
+        scales: {
+            x: { type: 'linear', position: 'bottom' },
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+const triggersChart = new Chart(ctxTriggers, {
+      type: 'line',
+      data: {
+          labels: [], // Will be filled with timestamps
+          datasets: [
+              { label: 'L2', data: [], borderColor: 'red', fill: false , pointRadius: 0},
+              { label: 'R2', data: [], borderColor: 'green', fill: false , pointRadius: 0}
+          ]
+      },
+      options: {
+        animation: {
+            duration: 0
+        },
         scales: {
             x: { type: 'linear', position: 'bottom' },
             y: { beginAtZero: true }
@@ -721,6 +749,10 @@ class DualSenseHid {
     batteryLevelText.value = batteryLevelPercent + '%';
 
 
+    // add by wayne
+    // Update the chart
+    this.updateChart(gyrox, gyroy, gyroz, accelx, accely, accelz);
+    this.updateTriggers(axes4, axes5); // using the axes4 and axes5 from the report, rather than l2axis and r2axis(0-1)
     
             // Update SVG color based on button state
     document.getElementById("button-cross").setAttribute("fill", cross ? "#00f" : "#333");
@@ -750,8 +782,32 @@ class DualSenseHid {
     
   }
 
-  // Update function to handle chart updates
+  updateTriggers(l2axis, r2axis) {
+    const maxDataPoints = 50;
 
+
+    triggersChart.data.datasets[0].data.push({ x: Date.now(), y: l2axis });
+    triggersChart.data.datasets[1].data.push({ x: Date.now(), y: r2axis });
+    if (triggersChart.data.datasets[0].data.length > maxDataPoints) {
+      triggersChart.data.datasets[0].data.shift();
+      triggersChart.data.datasets[1].data.shift();
+    }
+    triggersChart.update('none');
+  }
+
+
+// MARK: Update Chart in the class
+  // Update function to handle chart updates
+  updateChart(gyrox, gyroy, gyroz, accelx, accely, accelz) {
+    const timestamp = Date.now();
+    const maxDataPoints = 50;
+
+    // Update Gyroscope Chart
+    updateChartData(gyroscopeChart, timestamp, gyrox, gyroy, gyroz, maxDataPoints);
+
+    // Update Accelerometer Chart
+    updateChartData(accelerometerChart, timestamp, accelx, accely, accelz, maxDataPoints);
+  }
 
 
 
@@ -1255,6 +1311,25 @@ class DualSenseHid {
     return true;
   }
 }
+
+// MARK: Update Chart 
+// Helper function outside of the class
+function updateChartData(chart, timestamp, x, y, z, maxDataPoints) {
+  chart.data.labels.push(timestamp);
+  chart.data.datasets[0].data.push(x);
+  chart.data.datasets[1].data.push(y);
+  chart.data.datasets[2].data.push(z);
+
+  if (chart.data.labels.length > maxDataPoints) {
+    chart.data.labels.shift();
+    chart.data.datasets.forEach((dataset) => {
+      dataset.data.shift();
+    });
+  }
+
+  chart.update('none');
+}
+
 
 const requestDevice = async () => {
   let requestOptions = {

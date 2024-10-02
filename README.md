@@ -13,10 +13,14 @@ And for windows
 
 ## Source
 
+Development 
 - [pydualsense](https://github.com/flok/pydualsense)(preferred)
 - [hidapi](https://github.com/libusb/hidapi)
 - [dualsense-controller-python](https://github.com/yesbotics/dualsense-controller-python)
 
+Data of HID
+- [Sony DualSense](https://controllers.fandom.com/wiki/Sony_DualSense)
+- [dualsense](https://github.com/nondebug/dualsense)
 
 
 
