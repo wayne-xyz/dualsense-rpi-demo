@@ -9,7 +9,7 @@ def monitor_controller_inputs(mode='btn'):
     button_mapping = {
         'SQUARE': 'square',
         'TRIANGLE': 'triangle',
-        'CIRCLE': 'circle',
+        'CIRCLE': 'circle', 
         'CROSS': 'cross',
         'UP': 'DpadUp',
         'DOWN': 'DpadDown',
