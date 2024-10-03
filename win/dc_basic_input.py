@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 import signal
+import pyaudio
+import wave
+import os
+
 
 def monitor_controller_inputs(mode='btn'):
     dualsense = pydualsense()
@@ -241,6 +245,97 @@ def graphic_input():
         print("DualSense controller connection closed.")
 
 
+
+def search_dualsense_mic():
+    pa = pyaudio.PyAudio()
+    dualsense_mic_index = -1
+    for i in range(pa.get_device_count()):
+        dev = pa.get_device_info_by_index(i)
+        if dev['maxInputChannels'] > 0:
+            print(f"Input device {i}: {dev['name']}")
+            if "dualsense" in dev['name'].lower(): # there are many devices named start with "dualsense" and the index smaller is the microphone
+                return i
+    pa.terminate()
+    if dualsense_mic_index == -1:
+        print("DualSense microphone not found.")
+        return None
+    else:
+        print(f"DualSense microphone found at index {dualsense_mic_index}.")
+        return dualsense_mic_index
+    
+
+
+def audio_input():
+    dualsense_mic_index = search_dualsense_mic()
+    if dualsense_mic_index is None:
+        print("DualSense microphone not found. Exiting.")
+        return
+
+    pa = pyaudio.PyAudio()
+    
+    # Get the device info
+    device_info = pa.get_device_info_by_index(dualsense_mic_index)
+    print(f"Device info: {device_info}")
+    
+    # Determine the number of channels and sample rate from the device info
+    CHANNELS = int(device_info['maxInputChannels'])
+    RATE = int(device_info['defaultSampleRate'])
+    FORMAT = pyaudio.paInt16
+    CHUNK = 1024
+    print(f"CHANNELS: {CHANNELS}, RATE: {RATE}, FORMAT: {FORMAT}, CHUNK: {CHUNK}")
+
+    stream = pa.open(format=FORMAT,
+                     channels=CHANNELS,
+                     rate=RATE,
+                     input=True,
+                     input_device_index=dualsense_mic_index,
+                     frames_per_buffer=CHUNK)
+
+    print(f"Recording... (Channels: {CHANNELS}, Sample Rate: {RATE} Hz)")
+    print(f"Press Ctrl+C to stop recording.")
+    frames = []
+    try:
+        while True:
+            data = stream.read(CHUNK)
+            frames.append(data)
+    except KeyboardInterrupt:
+        print("Recording stopped.")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        pa.terminate()
+
+        # Save the data to a WAV file
+        with wave.open('dc_audio.wav', 'wb') as wf:
+            wf.setnchannels(CHANNELS)
+            wf.setsampwidth(pa.get_sample_size(FORMAT))
+            wf.setframerate(RATE)
+            wf.writeframes(b''.join(frames))
+
+    print("Audio data saved to dc_audio.wav")
+    
+    # Get file size
+    file_size = os.path.getsize('dc_audio.wav')
+    
+    print(f"File information: size={file_size} bytes, channels={CHANNELS}, "
+          f"sample width={pa.get_sample_size(FORMAT)} bytes, rate={RATE} Hz")
+    
+    with wave.open('dc_audio.wav', 'rb') as wf:
+        actual_channels = wf.getnchannels()
+        actual_sampwidth = wf.getsampwidth()
+        actual_framerate = wf.getframerate()
+        actual_frames = wf.getnframes()
+
+    print(f"Actual file information: channels={actual_channels}, "
+          f"sample width={actual_sampwidth} bytes, rate={actual_framerate} Hz, "
+          f"frames={actual_frames}")
+    
+#  the audio is mono, but in the system config it shows 2 
+
+
+
+
+
 if __name__ == "__main__":
     mode = 'btn'  # Default mode
     if len(sys.argv) > 1:
@@ -248,6 +343,8 @@ if __name__ == "__main__":
     
     if mode == 'graph':
         graphic_input()
+    elif mode == 'audio':
+        audio_input()
     elif mode in ['btn', 'stk', 'trg']:
         monitor_controller_inputs(mode)
     else:
