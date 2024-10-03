@@ -117,10 +117,11 @@ Connection type: <input type="text" id="connectiontype" style="width:100;" disab
 </div>
 
 
-<div id="chart-container" class="flex-container" style="width: 400px; height: 400px;">
+<div id="chart-container" class="flex-container" style="width: 720px; height: 400px;">
     <canvas id="Gyroscope" width="200" height="200"></canvas>
     <canvas id="Accelerometer" width="200" height="200"></canvas>
     <canvas id="Triggers" width="200" height="200"></canvas>
+    <canvas id="Touchpad" width="250" height="200"></canvas>
 </div>
 
 
@@ -321,6 +322,8 @@ const r2EffectParam7Text = document.getElementById('r2effectparam7');
 const ctxGyroscope = document.getElementById('Gyroscope').getContext('2d');
 const ctxAccelerometer = document.getElementById('Accelerometer').getContext('2d');
 const ctxTriggers = document.getElementById('Triggers').getContext('2d');
+const ctxTouchpad = document.getElementById('Touchpad').getContext('2d');
+
 const gyroscopeChart = new Chart(ctxGyroscope, {
     type: 'line',
     data: {
@@ -380,6 +383,85 @@ const triggersChart = new Chart(ctxTriggers, {
     }
 });
 
+
+const touchpadChart = new Chart(ctxTouchpad, {
+    type: 'scatter',
+    data: {
+        datasets: [
+            {
+                label: 'Finger 1',
+                data: [],
+                backgroundColor: 'rgba(255, 0, 0, 0.7)',
+                pointRadius: 5
+            },
+            {
+                label: 'Finger 2',
+                data: [],
+                backgroundColor: 'rgba(0, 0, 255, 0.7)',
+                pointRadius: 5
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        devicePixelRatio: 1, // Reduce resolution for better performance
+        scales: {
+            x: {
+                type: 'linear',
+                position: 'top',
+                min: 0,
+                max: 1920, // DualSense touchpad X range
+                ticks: {
+                    display: false // Hide ticks for better performance
+                },
+                grid: {
+                    display: false // Hide grid for better performance
+                }
+
+            },
+            y: {
+                type: 'linear',
+                position: 'left',
+                min: 0,
+                max: 1080, // DualSense touchpad Y range
+                reverse: true, // This makes y increase downwards
+                ticks: {
+                    display: false // Hide ticks for better performance
+                },
+                grid: {
+                    display: false // Hide grid for better performance
+                }
+
+            }
+        },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'bottom'
+            },
+            title: {
+                display: true,
+                text: 'DualSense Touchpad'
+            },
+            tooltip: {
+                enabled: false  // Disable tooltips for better performance
+            }
+        },
+        animation: false, // Disable animation for better performance
+        hover: {
+          mode: null  // Disable hover interactions
+        },
+        elements: {
+            point: {
+                radius: 5,
+                hitRadius: 5,
+                hoverRadius: 5,
+                borderWidth: 0 // Remove border for better performance
+            }
+        }
+    }
+});
 
 
 const hex8 = value => { return ('00' + (value >>> 0).toString(16)).substr(-2); };
@@ -753,6 +835,7 @@ class DualSenseHid {
     // Update the chart
     this.updateChart(gyrox, gyroy, gyroz, accelx, accely, accelz);
     this.updateTriggers(axes4, axes5); // using the axes4 and axes5 from the report, rather than l2axis and r2axis(0-1)
+    this.updateTouchpadChart(touch0active, touch0x, touch0y, touch1active, touch1x, touch1y);
     
             // Update SVG color based on button state
     document.getElementById("button-cross").setAttribute("fill", cross ? "#00f" : "#333");
@@ -782,6 +865,8 @@ class DualSenseHid {
     
   }
 
+
+// MARK: Update Chart in the class
   updateTriggers(l2axis, r2axis) {
     const maxDataPoints = 50;
 
@@ -796,7 +881,7 @@ class DualSenseHid {
   }
 
 
-// MARK: Update Chart in the class
+
   // Update function to handle chart updates
   updateChart(gyrox, gyroy, gyroz, accelx, accely, accelz) {
     const timestamp = Date.now();
@@ -813,7 +898,22 @@ class DualSenseHid {
 
 
 
+updateTouchpadChart(touch0active, touch0x, touch0y, touch1active, touch1x, touch1y) {
+  const maxDataPoints = 50;
+    // Clear previous data
+    touchpadChart.data.datasets[0].data = [];
+    touchpadChart.data.datasets[1].data = [];
 
+    // Add new data points
+    if (touch0active) {
+      touchpadChart.data.datasets[0].data[0] = touch0active ? {x: touch0x, y: touch0y} : null;
+    }
+    if (touch1active) {
+      touchpadChart.data.datasets[1].data[0] = touch1active ? {x: touch1x, y: touch1y} : null;
+    }
+
+    touchpadChart.update('none'); // Update without animation
+}
 
 
 

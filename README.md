@@ -7,6 +7,12 @@ And for windows
 Demos for Dualsense controller and Raspberry Pi 3B+
 And for windows 
 
+## TODO
+- Lantency of the touchpad
+- ACC y when stable is more than 8000
+
+
+
 ## Sep-11 2024
 - Using pydualsense to test communication with the controller and perform basic actions
 - Added pi-prep.sh to check if all prerequisites are met
