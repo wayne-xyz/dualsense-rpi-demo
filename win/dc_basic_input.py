@@ -129,9 +129,11 @@ def graphic_input():
     ax2.legend()
 
     # 3. Analog Sticks
-    stick_scatter = ax3.scatter([128, 128], [128, 128], c=['r', 'b'], alpha=0)
-    ax3.set_xlim(0, 255)
-    ax3.set_ylim(255, 0)
+    stick_scatter = ax3.scatter([0, 0], [0, 0], c=['r', 'b'], alpha=0)  # Initialize at center (0, 0)
+    ax3.set_xlim(-128, 128)
+    ax3.set_ylim(128, -128)  # Invert Y-axis to match stick orientation
+    ax3.axhline(y=0, color='k', linestyle='--', linewidth=0.5)  # Add horizontal center line
+    ax3.axvline(x=0, color='k', linestyle='--', linewidth=0.5)  # Add vertical center line
     ax3.set_title('Analog Sticks')
     ax3.set_xlabel('X')
     ax3.set_ylabel('Y')
