@@ -24,8 +24,7 @@ def simple_data_collection(label: str, session_time: int = 500, collection_durat
     session_id = 0
     
     while (time.time() - start_time) * 1000 < collection_duration:
-        current_time_num = time.time()
-        current_time = time.strftime("%Y%m%d-%H%M%S-") + "{:04d}".format(int((current_time_num % 1) * 10000))
+        current_time = time.time()
         # Get sensor data from dualsense
         gyro = dualsense.state.gyro
         accel = dualsense.state.accelerometer
@@ -46,7 +45,7 @@ def simple_data_collection(label: str, session_time: int = 500, collection_durat
         inertial_data.append(data_point)
         
         # Update session_id every session_time milliseconds
-        if (current_time_num - start_time) * 1000 // session_time > session_id:
+        if ( current_time - start_time) * 1000 // session_time > session_id:
             session_id += 1
             
         time.sleep(0.001)  # Small delay to prevent overwhelming the controller
