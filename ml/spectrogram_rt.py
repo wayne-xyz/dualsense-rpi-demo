@@ -321,56 +321,74 @@ def list_audio_devices():
     p.terminate()
     return info
 
-
-def show_audio_frequency_realtime(mic_index=None, duration=30, rate=48000, chunk=2048):
-    """Show real-time frequency line plot for a specific audio device"""
+def show_audio_time_freq_realtime(mic_index=None, duration=30, rate=48000, chunk=2048):
+    """Show real-time time-domain and time-frequency (spectrogram) plots."""
     try:
-        # Check if mic_index is valid
         pa = pyaudio.PyAudio()
+        
+        # Validate mic_index
         try:
-            stream = pa.open(
+            pa.open(
                 format=pyaudio.paInt16,
                 channels=1,
                 rate=rate,
                 input=True,
                 input_device_index=mic_index,
                 frames_per_buffer=chunk
-            )
-            stream.close()
+            ).close()
             print(f"Mic index {mic_index} is valid")
         except Exception as e:
             print(f"Mic index {mic_index} is not valid: {e}")
             return None
         
-        # Print device info
         device_info = pa.get_device_info_by_index(mic_index)
         print(f"Device name: {device_info['name']}")
         
         # Initialize plot
-        plt.ion()  # Enable interactive mode
-        fig, ax = plt.subplots(figsize=(12, 6))
+        plt.ion()
+        fig, (ax_time, ax_spec) = plt.subplots(2, 1, figsize=(12, 12))
         
-        # Calculate frequency bins
-        freq_bins = np.fft.rfftfreq(chunk, 1/rate)
+        # Time domain plot
+        time_data = np.zeros(chunk)
+        line_time, = ax_time.plot(np.arange(chunk) / rate, time_data)
+        ax_time.set_title('Time Domain')
+        ax_time.set_ylabel('Amplitude')
+        ax_time.set_ylim(-32768, 32767)
+        ax_time.grid(True)
         
-        # Create initial empty line plot
-        line, = ax.plot(freq_bins, np.zeros_like(freq_bins))
+        # Spectrogram plot
+        spec_segments = 100  # Number of time segments to display
+        freqs = np.fft.rfftfreq(chunk, 1/rate)
+        spec_data = np.zeros((len(freqs), spec_segments))
         
-        # Set up plot parameters
-        ax.set_title(f'Real-Time Frequency Analysis - {device_info["name"]}')
-        ax.set_xlabel('Frequency [Hz]')
-        ax.set_ylabel('Magnitude [dB]')
-        ax.set_xscale('log')
-        ax.set_xlim(20, 20000)  # Audio frequency range
-        ax.set_ylim(-100, 0)    # dB range
-        ax.grid(True)
+        # Create initial spectrogram
+        im = ax_spec.pcolormesh(np.arange(spec_segments) * chunk/rate, 
+                               freqs, 
+                               spec_data,
+                               shading='gouraud',
+                               cmap='viridis',
+                               vmin=-100,
+                               vmax=0)
         
-        # Add frequency ticks
-        freq_ticks = [20, 50, 100, 200, 500, 1000, 2000, 4000, 8000, 12000, 16000, 20000]
-        ax.set_xticks(freq_ticks)
-        ax.set_xticklabels([f'{f:g}' for f in freq_ticks])
+        plt.colorbar(im, ax=ax_spec, label='Magnitude [dB]')
+        ax_spec.set_title('Time-Frequency Domain (Spectrogram)')
+        ax_spec.set_xlabel('Time [s]')
+        ax_spec.set_ylabel('Frequency [Hz]')
+        ax_spec.set_yscale('log')
+        ax_spec.set_ylim(20, rate/2)
         
-        # Open audio stream
+        # Create audio buffer
+        buffer_size = chunk * 4
+        audio_buffer = np.zeros(buffer_size, dtype=np.int16)
+        
+        # Audio stream with callback
+        def audio_callback(in_data, frame_count, time_info, status):
+            audio_data = np.frombuffer(in_data, dtype=np.int16)
+            audio_buffer[:-frame_count] = audio_buffer[frame_count:]
+            audio_buffer[-frame_count:] = audio_data
+            return (in_data, pyaudio.paContinue)
+        
+        # Open stream with callback
         stream = pa.open(
             format=pyaudio.paInt16,
             channels=1,
@@ -378,43 +396,50 @@ def show_audio_frequency_realtime(mic_index=None, duration=30, rate=48000, chunk
             input=True,
             input_device_index=mic_index,
             frames_per_buffer=chunk,
+            stream_callback=audio_callback,
             start=True
         )
         
         print("\nRecording and plotting in realtime...")
         start_time = time.time()
+        last_update = 0
+        update_interval = 0.03  # 30ms update interval
         
         try:
             while time.time() - start_time < duration:
-                try:
-                    # Read audio data
-                    data = stream.read(chunk, exception_on_overflow=False)
-                    audio_chunk = np.frombuffer(data, dtype=np.int16).astype(np.float32)
+                current_time = time.time()
+                
+                if current_time - last_update >= update_interval:
+                    # Get latest chunk of data
+                    latest_data = audio_buffer[-chunk:]
                     
-                    # Compute FFT
-                    fft_data = np.fft.rfft(audio_chunk * np.hanning(len(audio_chunk)))
+                    # Time domain update
+                    line_time.set_ydata(latest_data)
                     
-                    # Convert to magnitude in dB
+                    # Spectrogram update
+                    fft_data = np.fft.rfft(latest_data * np.hanning(chunk))
                     magnitude_db = 20 * np.log10(np.abs(fft_data) + 1e-10)
                     
-                    # Update line data
-                    line.set_ydata(magnitude_db)
+                    # Roll spectrogram data and update
+                    spec_data = np.roll(spec_data, -1, axis=1)
+                    spec_data[:, -1] = magnitude_db
                     
-                    # Update plot
-                    fig.canvas.draw()
+                    # Update spectrogram
+                    im.set_array(spec_data.ravel())
+                    
+                    # Efficient plot update
+                    fig.canvas.draw_idle()
                     fig.canvas.flush_events()
-                    plt.pause(0.01)
                     
-                except IOError as e:
-                    print(f"Warning: Buffer overflow - {e}")
-                    continue
+                    last_update = current_time
+                
+                plt.pause(0.001)
                 
         except Exception as e:
             print(f"Error during recording: {e}")
             raise e
             
         finally:
-            # Cleanup
             stream.stop_stream()
             stream.close()
             pa.terminate()
@@ -426,15 +451,9 @@ def show_audio_frequency_realtime(mic_index=None, duration=30, rate=48000, chunk
         return None
 
 
-
 def main():
     list_audio_devices()
-    show_audio_frequency_realtime(
-        mic_index=2,     # Specify your device index
-        duration=30,     # Run for 30 seconds
-        rate=48000,      # Sample rate
-        chunk=2048       # Buffer size
-    )
+    show_audio_time_freq_realtime(mic_index=1, duration=30, rate=48000, chunk=2048)
 
 
 # Example usage:
