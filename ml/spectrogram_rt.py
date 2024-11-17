@@ -219,7 +219,13 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
     
     # Create window with GraphicsLayoutWidget
     win = pg.GraphicsLayoutWidget()
-    win.setWindowTitle('Real-time Audio Analysis')
+
+    # get the device name
+    pa = pyaudio.PyAudio()
+    device_info = pa.get_device_info_by_index(mic_index)
+    device_name = device_info['name']
+
+    win.setWindowTitle(f'Real-time Audio Analysis - {device_name}')
     win.resize(1200, 800)
     
     # Create plots
