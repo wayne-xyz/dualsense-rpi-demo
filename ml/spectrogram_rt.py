@@ -218,6 +218,7 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
 
     # rate = 48000 sample per second(hz)
     # chunk = 2048 number of samples per chunk, per processing block
+    # fft size = 2048/2 + 1 = 1025
     # 2048/48000 = 0.04266666666666667 seconds per chunk about 43 ms
 
     # 
@@ -260,7 +261,7 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
     p2.addItem(img)
     
     # Set up colormap
-    colormap = pg.colormap.get('viridis')
+    colormap = pg.colormap.get('inferno')
     img.setColorMap(colormap)
     
     # Add colorbar
