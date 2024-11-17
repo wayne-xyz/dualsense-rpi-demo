@@ -231,10 +231,10 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
     p2.setLabel('left', "Frequency", units='Hz')
     p2.setLabel('bottom', "Time", units='s')
     p2.setLogMode(y=True)  # Log scale for frequency
-    p2.setYRange(0, 24000)  # Set vertical range to 0-24kHz
+    p2.setYRange(20, 24000)  # Changed minimum to 20Hz due to log scale
     
     # Add frequency ticks
-    ticks = [0, 4000, 8000, 12000, 16000, 20000, 24000]
+    ticks = [20, 50, 100, 200, 500, 1000, 2000, 4000, 8000, 12000, 16000, 20000, 24000]
     p2.getAxis('left').setTicks([[(v, f'{v}') for v in ticks]])
     
     # Initialize data
@@ -248,7 +248,7 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
     
     # Add colorbar
     colorbar = pg.ColorBarItem(
-        values=(-100, 0),  # Range of values in the spectrogram
+        values=(-100, 0),
         colorMap=colormap,
         label='Magnitude (dB)',
         limits=(-100, 0)
@@ -264,6 +264,9 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
     tr = QtGui.QTransform()
     tr.scale(chunk/rate, 24000/(chunk//2))
     img.setTransform(tr)
+    
+    # Set position to fill the plot
+    img.setPos(0, 0)  # Start from origin
     
     # Set up audio buffer and processing
     buffer_size = chunk * 4
