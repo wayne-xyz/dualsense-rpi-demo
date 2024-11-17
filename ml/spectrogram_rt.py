@@ -7,7 +7,8 @@ import plotly.graph_objects as go
 from scipy.signal import spectrogram
 import time
 import plotly.io as pio
-
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui, QtCore
 
 
 
@@ -57,246 +58,6 @@ def search_dualsense_mic():
     
 
 
-def get_dualsense_audio_realtime_matplotlib(duration=10, rate=48000, chunk=1024,mic_index=None):
-    """Capture and plot audio in real-time with Matplotlib"""
-    try:
-        # Initialize PyAudio
-        pa = pyaudio.PyAudio()
-        
-        # Find DualSense mic
-        if mic_index is None:
-            mic_index = search_dualsense_mic()
-            if mic_index is None:
-                print("Could not find DualSense microphone!")
-                return None
-        print(f"current mic_index: {mic_index}")
-        
-        # Get device info
-        device_info = pa.get_device_info_by_index(mic_index)
-        print(f"\nUsing device: {device_info['name']}")
-        
-        # Set up the plot
-        plt.ion()  # Enable interactive mode
-        fig, ax = plt.subplots(figsize=(10, 6))
-        
-        # Buffer for audio data
-        buffer_size = rate  # 1 second buffer
-        audio_buffer = np.zeros(buffer_size)
-        
-        # Create initial spectrogram
-        Pxx, freqs, bins, im = ax.specgram(
-            audio_buffer,
-            NFFT=1024,
-            Fs=rate,
-            noverlap=512,
-            cmap='viridis',
-            mode='magnitude',
-            scale='dB',
-            vmin=-100,
-            vmax=0
-        )
-        
-        plt.colorbar(im, label='Intensity [dB]')
-        ax.set_title('Real-Time Audio Spectrogram')
-        ax.set_xlabel('Time [s]')
-        ax.set_ylabel('Frequency [Hz]')
-        ax.set_ylim(20, rate/2)  # Set frequency range
-        ax.set_yscale('log')     # Log scale for frequency
-        
-        # Open stream
-        try:
-            stream = pa.open(
-                format=pyaudio.paInt16,
-                channels=1,
-                rate=rate,
-                input=True,
-                input_device_index=mic_index,
-                frames_per_buffer=chunk
-            )
-        except OSError as e:
-            print(f"Error opening stream: {e}")
-            pa.terminate()
-            return None
-            
-        print("\nRecording and plotting in realtime...")
-        start_time = time.time()
-        
-        try:
-            while time.time() - start_time < duration:
-                # Read audio data
-                data = stream.read(chunk, exception_on_overflow=False)
-                audio_chunk = np.frombuffer(data, dtype=np.int16).astype(np.float32)
-                
-                # Update buffer
-                audio_buffer = np.roll(audio_buffer, -len(audio_chunk))
-                audio_buffer[-len(audio_chunk):] = audio_chunk
-                
-                # Clear previous plot
-                ax.clear()
-                
-                # Update spectrogram
-                Pxx, freqs, bins, im = ax.specgram(
-                    audio_buffer,
-                    NFFT=1024,
-                    Fs=rate,
-                    noverlap=512,
-                    cmap='viridis',
-                    mode='magnitude',
-                    scale='dB',
-                    vmin=-100,
-                    vmax=0
-                )
-                
-                # Restore plot settings
-                ax.set_title('Real-Time Audio Spectrogram')
-                ax.set_xlabel('Time [s]')
-                ax.set_ylabel('Frequency [Hz]')
-                ax.set_ylim(20, rate/2)
-                ax.set_yscale('log')
-                
-                # Force update
-                fig.canvas.draw()
-                fig.canvas.flush_events()
-                
-        except Exception as e:
-            print(f"Error during recording: {e}")
-            raise e  # Show full error details
-        
-        finally:
-            stream.stop_stream()
-            stream.close()
-            pa.terminate()
-            plt.ioff()
-            plt.close()
-            
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return None
-    
-
-# using scipy.signal.spectrogram to show the spectrogram
-
-def get_dualsense_audio_realtime_scipy(duration=10, rate=48000, chunk=1024, mic_index=None):
-    """Display real-time spectrogram using scipy.signal"""
-    try:
-        if mic_index is None:
-            mic_index = search_dualsense_mic()
-            if mic_index is None:
-                print("Could not find DualSense microphone!")
-                return None
-        
-        print(f"current mic_index: {mic_index}")
-
-        # Initialize plot
-        plt.ion()  # Enable interactive mode
-        fig, ax = plt.subplots(figsize=(10, 6))
-        
-        # Increase buffer size for smoother display
-        buffer_duration = 2  # 2 seconds of audio buffer
-        buffer_size = int(rate * buffer_duration)
-        audio_buffer = np.zeros(buffer_size)
-        
-        # Initial spectrogram calculation
-        f, t, Sxx = spectrogram(
-            audio_buffer,
-            fs=rate,
-            nperseg=1024,
-            noverlap=768,
-            nfft=2048,
-            window='hann'
-        )
-        
-        # Create initial plot
-        im = ax.pcolormesh(t, f, np.zeros_like(Sxx),
-                          cmap='viridis',
-                          shading='gouraud',
-                          vmin=-100,
-                          vmax=0)
-        
-        plt.colorbar(im, label='Intensity [dB]')
-        ax.set_title('Real-Time Audio Spectrogram')
-        ax.set_xlabel('Time [s]')
-        ax.set_ylabel('Frequency [Hz]')
-        
-        # Set frequency range
-        min_freq = 20
-        max_freq = 24000  # Extended range to 24kHz
-        ax.set_yscale('log')
-        ax.set_ylim(min_freq, max_freq)
-        
-        # Add frequency ticks
-        freq_ticks = [20, 50, 100, 200, 500, 1000, 2000, 4000, 8000, 12000, 16000, 20000, 24000]
-        ax.set_yticks(freq_ticks)
-        ax.set_yticklabels([f'{f:g}' for f in freq_ticks])
-        
-        # Open audio stream
-        pa = pyaudio.PyAudio()
-        stream = pa.open(
-            format=pyaudio.paInt16,
-            channels=1,
-            rate=rate,
-            input=True,
-            input_device_index=mic_index,
-            frames_per_buffer=chunk,
-            stream_callback=None,
-            start=True
-        )
-
-        print("\nRecording and plotting in realtime...")
-        start_time = time.time()
-
-        try:
-            while time.time() - start_time < duration:
-                try:
-                    data = stream.read(chunk, exception_on_overflow=False)
-                    audio_chunk = np.frombuffer(data, dtype=np.int16).astype(np.float32)
-                    
-                    # Update buffer with overlap
-                    audio_buffer = np.roll(audio_buffer, -len(audio_chunk))
-                    audio_buffer[-len(audio_chunk):] = audio_chunk
-                    
-                    # Calculate spectrogram with updated buffer
-                    f, t, Sxx = spectrogram(
-                        audio_buffer,
-                        fs=rate,
-                        nperseg=1024,
-                        noverlap=768,
-                        nfft=2048,
-                        window='hann'
-                    )
-                    
-                    # Convert to dB scale
-                    Sxx_db = 10 * np.log10(Sxx + 1e-10)
-                    Sxx_db = np.clip(Sxx_db, -100, 0)
-                    
-                    # Update plot
-                    im.set_array(Sxx_db.T.ravel()) 
-                    
-                    # Force update with reduced frequency
-                    if time.time() % 0.1 < 0.05:  # Update every 100ms
-                        fig.canvas.draw_idle()
-                        fig.canvas.flush_events()
-                    
-                except IOError as e:
-                    print(f"Warning: Buffer overflow - {e}")
-                    continue
-
-                plt.pause(0.01)  # Small pause
-
-        except Exception as e:
-            print(f"Error during recording: {e}")
-            raise e
-            
-        finally:
-            stream.stop_stream()
-            stream.close()
-            pa.terminate()
-            plt.ioff()
-            plt.close()
-
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return None
         
 
 # 
@@ -451,9 +212,98 @@ def show_audio_time_freq_realtime(mic_index=None, duration=30, rate=48000, chunk
         return None
 
 
+
+def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, chunk=2048):
+    """Real-time audio visualization using PyQtGraph"""
+    app = pg.mkQApp()
+    
+    # Create window with GraphicsLayoutWidget
+    win = pg.GraphicsLayoutWidget()
+    win.setWindowTitle('Real-time Audio Analysis')
+    win.resize(1200, 800)
+    
+    # Create plots
+    p1 = win.addPlot(row=0, col=0)
+    p1.setLabel('left', "Amplitude")
+    p1.setLabel('bottom', "Time", units='s')
+    
+    p2 = win.addPlot(row=1, col=0)
+    p2.setLabel('left', "Frequency", units='Hz')
+    p2.setLabel('bottom', "Time", units='s')
+    p2.setLogMode(y=True)  # Log scale for frequency
+    
+    # Initialize data
+    time_curve = p1.plot(pen='y')
+    img = pg.ImageItem()
+    p2.addItem(img)
+    
+    # Set up colormap
+    colormap = pg.colormap.get('viridis')
+    img.setColorMap(colormap)
+    
+    # Set up audio buffer and processing
+    buffer_size = chunk * 4
+    audio_buffer = np.zeros(buffer_size, dtype=np.int16)
+    spec_data = np.zeros((chunk//2 + 1, 100))
+    
+    # Audio callback
+    def audio_callback(in_data, frame_count, time_info, status):
+        audio_data = np.frombuffer(in_data, dtype=np.int16)
+        audio_buffer[:-frame_count] = audio_buffer[frame_count:]
+        audio_buffer[-frame_count:] = audio_data
+        return (in_data, pyaudio.paContinue)
+    
+    # Update function
+    def update():
+        nonlocal spec_data
+        
+        # Get latest audio data
+        latest_data = audio_buffer[-chunk:]
+        
+        # Update time domain
+        time_curve.setData(np.arange(chunk) / rate, latest_data)
+        
+        # Update spectrogram
+        fft_data = np.fft.rfft(latest_data * np.hanning(chunk))
+        magnitude_db = 20 * np.log10(np.abs(fft_data) + 1e-10)
+        
+        spec_data = np.roll(spec_data, -1, axis=1)
+        spec_data[:, -1] = magnitude_db
+        
+        img.setImage(spec_data, levels=(-100, 0))
+    
+    # Set up audio stream
+    pa = pyaudio.PyAudio()
+    stream = pa.open(
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=rate,
+        input=True,
+        input_device_index=mic_index,
+        frames_per_buffer=chunk,
+        stream_callback=audio_callback,
+        start=True
+    )
+    
+    # Set up timer for updates
+    timer = QtCore.QTimer()
+    timer.timeout.connect(update)
+    timer.start(30)  # 30ms update interval
+    
+    # Show window and start
+    win.show()
+    app.exec()
+    
+    # Cleanup
+    stream.stop_stream()
+    stream.close()
+    pa.terminate()
+
+
+
 def main():
     list_audio_devices()
-    show_audio_time_freq_realtime(mic_index=1, duration=30, rate=48000, chunk=2048)
+    show_audio_time_freq_realtime_pyqt(mic_index=1, duration=30, rate=48000, chunk=2048)
 
 
 # Example usage:
