@@ -215,6 +215,13 @@ def show_audio_time_freq_realtime(mic_index=None, duration=30, rate=48000, chunk
 
 def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, chunk=2048):
     """Real-time audio visualization using PyQtGraph"""
+
+    # rate = 48000 sample per second(hz)
+    # chunk = 2048 number of samples per chunk, per processing block
+    # 2048/48000 = 0.04266666666666667 seconds per chunk about 43 ms
+
+    # 
+
     app = pg.mkQApp()
     
     # Create window with GraphicsLayoutWidget
@@ -236,8 +243,12 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
     p2 = win.addPlot(row=1, col=0)
     p2.setLabel('left', "Frequency", units='Hz')
     p2.setLabel('bottom', "Time", units='s')
-    p2.setLogMode(y=True)  # Log scale for frequency
-    p2.setYRange(20, 24000)  # Changed minimum to 20Hz due to log scale
+    p2.setLogMode(y=False)  # Log scale for frequency
+    p2.setYRange(20, 24000)  # Set frequency range
+    
+    # Disable auto scaling
+    p2.enableAutoRange(False)
+    p2.setAutoVisible(False)
     
     # Add frequency ticks
     ticks = [20, 50, 100, 200, 500, 1000, 2000, 4000, 8000, 12000, 16000, 20000, 24000]
@@ -260,15 +271,16 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
         limits=(-100, 0)
     )
     colorbar.setImageItem(img)
-    win.addItem(colorbar, row=1, col=1)  # Add colorbar to the right of spectrogram
+    win.addItem(colorbar, row=1, col=1)
     
     # Calculate scales
-    freq_scale = np.linspace(0, 24000, chunk//2 + 1)
-    time_scale = np.arange(100) * chunk/rate
+    freq_points = chunk//2 + 1
+    time_points = 100
+    spec_data = np.zeros((freq_points, time_points))
     
     # Set the transform for proper scaling
     tr = QtGui.QTransform()
-    tr.scale(chunk/rate, 24000/(chunk//2))
+    tr.scale(chunk/rate, 24000/freq_points)
     img.setTransform(tr)
     
     # Set position to fill the plot
@@ -300,9 +312,9 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
         fft_data = np.fft.rfft(latest_data * np.hanning(chunk))
         magnitude_db = 20 * np.log10(np.abs(fft_data) + 1e-10)
         
-        # Change the roll direction and data assignment
-        spec_data = np.roll(spec_data, -1, axis=1)  # Roll horizontally
-        spec_data[:, -1] = magnitude_db[::-1]  # Flip the frequency data vertically
+        # Roll and update spectrogram data
+        spec_data = np.roll(spec_data, -1, axis=1)
+        spec_data[:, -1] = magnitude_db[::-1]  # Flip frequency data
         
         # Update image
         img.setImage(spec_data.T, levels=(-100, 0))  # Transpose the data for correct orientation
