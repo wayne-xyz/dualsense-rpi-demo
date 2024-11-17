@@ -231,6 +231,11 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
     p2.setLabel('left', "Frequency", units='Hz')
     p2.setLabel('bottom', "Time", units='s')
     p2.setLogMode(y=True)  # Log scale for frequency
+    p2.setYRange(0, 24000)  # Set vertical range to 0-24kHz
+    
+    # Add frequency ticks
+    ticks = [0, 4000, 8000, 12000, 16000, 20000, 24000]
+    p2.getAxis('left').setTicks([[(v, f'{v}') for v in ticks]])
     
     # Initialize data
     time_curve = p1.plot(pen='y')
@@ -240,6 +245,25 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
     # Set up colormap
     colormap = pg.colormap.get('viridis')
     img.setColorMap(colormap)
+    
+    # Add colorbar
+    colorbar = pg.ColorBarItem(
+        values=(-100, 0),  # Range of values in the spectrogram
+        colorMap=colormap,
+        label='Magnitude (dB)',
+        limits=(-100, 0)
+    )
+    colorbar.setImageItem(img)
+    win.addItem(colorbar, row=1, col=1)  # Add colorbar to the right of spectrogram
+    
+    # Calculate scales
+    freq_scale = np.linspace(0, 24000, chunk//2 + 1)
+    time_scale = np.arange(100) * chunk/rate
+    
+    # Set the transform for proper scaling
+    tr = QtGui.QTransform()
+    tr.scale(chunk/rate, 24000/(chunk//2))
+    img.setTransform(tr)
     
     # Set up audio buffer and processing
     buffer_size = chunk * 4
@@ -267,10 +291,12 @@ def show_audio_time_freq_realtime_pyqt(mic_index=None, duration=30, rate=48000, 
         fft_data = np.fft.rfft(latest_data * np.hanning(chunk))
         magnitude_db = 20 * np.log10(np.abs(fft_data) + 1e-10)
         
-        spec_data = np.roll(spec_data, -1, axis=1)
-        spec_data[:, -1] = magnitude_db
+        # Change the roll direction and data assignment
+        spec_data = np.roll(spec_data, -1, axis=1)  # Roll horizontally
+        spec_data[:, -1] = magnitude_db[::-1]  # Flip the frequency data vertically
         
-        img.setImage(spec_data, levels=(-100, 0))
+        # Update image
+        img.setImage(spec_data.T, levels=(-100, 0))  # Transpose the data for correct orientation
     
     # Set up audio stream
     pa = pyaudio.PyAudio()
