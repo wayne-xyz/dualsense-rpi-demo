@@ -1,7 +1,0 @@
-pyqtgraph
-pydualsense
-pyaudio
-scipy
-numpy
-matplotlib
-pyqt5

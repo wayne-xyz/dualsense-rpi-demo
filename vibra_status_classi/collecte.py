@@ -5,12 +5,15 @@
 import argparse
 import time
 import numpy as np
-import pandas as pd
 import os
-import sys
 import logging
 import pydualsense as ds
 
+# print env info:
+import sys
+print(f"sys.platform: {sys.platform}")
+# import hidapi
+# print(hidapi.__version__)
 
 
 # data format: 
@@ -23,7 +26,7 @@ data_fields=[
     "gyro_yaw",
     "gyro_roll",
     "vibration_status", # 0: no vibration, 1: vibration type 1, 2: vibration type 2, 3: vibration type 3
-    "label" # 0:on table, 1:in hand
+    "label", # 0:on table, 1:in hand
     "person_id" # 0: person 1, 1: person 2, 2: person 3, 3: person 4
 ]
 
@@ -47,12 +50,12 @@ vib_pattern={
 
 def collect_data(data_fields=data_fields, vib_pattern=vib_pattern, rule1=rule1, label=0, person_id=0, pattern_id=0):
     print(f"Parameters: person_id={person_id}, pattern_id={pattern_id}, label={label}")
-
+    # Add your data collection logic here
     pass
 
 
 def main():
-
+    # Add your main logic here
     pass
 
 
