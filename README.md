@@ -1,6 +1,6 @@
 # dualsense-rpi-demo
 For dualsense controller and raspberry pi 
-And for windows 
+And for windows for MacOS
 
 
 ## Description
@@ -8,14 +8,15 @@ Demos for Dualsense controller and Raspberry Pi 3B+
 And for windows 
 
 ## TODO
-- Lantency of the touchpad
-- ACC y when stable is more than 8000
+- [ ] Limitation of the vibration frequncy 
+- [ ] Limitation of the vibration amplitude 
+- [ ] Limitation frequency of the speaker's output
+- [ ] Limitation frequency of the mic's input
+- [ ] Vibrate when identify the status of the controller
 
+## Features data
+sampling/polling rate from controller: 250hz , hid is 1000hz
 
-
-## Sep-11 2024
-- Using pydualsense to test communication with the controller and perform basic actions
-- Added pi-prep.sh to check if all prerequisites are met
 
 ## Source
 
@@ -39,12 +40,16 @@ Data of HID
 
 
 
-###Raspberry Pi
+### Raspberry Pi
 - Raspberry Pi 3B+
 - Dualsense controller
 - Raspberry Pi OS Lite (64-bit)
 
-
+### MacOS
+- MacOS 14.0
+- Python 3.11
+- Preparing the hidapi 
+- Install pydualsense
 
 
 # Environment

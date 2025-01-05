@@ -1,0 +1,11 @@
+# System requirements (install via brew)
+# brew install hidapi
+# brew install libusb
+
+# conda packages
+conda-forge::cython>=0.29.24
+conda-forge::libusb>=1.0.26
+
+# pip packages (install after conda packages)
+hidapi>=0.14.0
+pydualsense==0.5.0 
