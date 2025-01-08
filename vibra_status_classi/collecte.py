@@ -82,6 +82,9 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
             # Get sensor data
             acc = dualsense.state.accelerometer
             gyro = dualsense.state.gyro
+                        # skip the zero data x,y,z, pitch, yaw, roll all 0 
+            if acc.X == 0 and acc.Y == 0 and acc.Z == 0 and gyro.Pitch == 0 and gyro.Yaw == 0 and gyro.Roll == 0:
+                continue
             
             # Create data row
             data_row = [
