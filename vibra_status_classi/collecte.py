@@ -10,6 +10,8 @@ import csv
 import pydualsense as ds
 import numpy as np
 import datetime
+import threading
+import math
 
 # print env info:
 import sys
@@ -39,13 +41,14 @@ rule1={
 }
 
 # vibration pattern
+# intensity 0 to 255 when using the api of the pydualsense 
 vib_pattern={
     0:"no_vibration",
-    1:"4khz",
-    2:"1khz",
-    3:"250hz",
+    1:"half_intensity", # 128
+    2:"full_intensity", # 255
+    3:"sin_wave",# ramp up from 0 to 255 and down from 255 to 0 in 1000ms,1hz
     4:"50hz",
-    5:"rhythmic_pulses", # 100 pulse and 100 pause , frequency modulation
+    5:"rhythmic_pulses", # 255 1ms 0 1ms ...
     6:"frequency_modulation", # from 100hz to 200hz adjustable wave 
     7:"amplitude_modulation", # from the 0 to 100% adjustable wave  of the vibration
 }
@@ -53,6 +56,70 @@ vib_pattern={
 
 CSV_FILE_NAME="inertial_data"
 
+
+# Add this function for sine wave vibration
+def sine_wave_vibration(dualsense: ds.pydualsense, stop_event: threading.Event):
+    """
+    Generate a sine wave vibration pattern
+    Frequency: 1Hz (complete cycle in 1000ms)
+    Amplitude: 0-255
+    """
+    try:
+        frequency = 1  # 1Hz = 1000ms period
+        sample_rate = 1000  # samples per second
+        dt = 1.0/sample_rate
+        
+        while not stop_event.is_set():
+            # Generate one cycle of sine wave
+            t = time.time()
+            # Convert sine wave (-1 to 1) to motor values (0 to 255)
+            value = int(127.5 * (math.sin(2 * math.pi * frequency * t) + 1))
+            dualsense.setLeftMotor(value)
+            dualsense.setRightMotor(value)
+            time.sleep(dt)
+            
+    except Exception as e:
+        print(f"Error in sine wave thread: {e}")
+    finally:
+        dualsense.setLeftMotor(0)
+        dualsense.setRightMotor(0)
+
+# Modify the start_vibration_pattern function
+def start_vibration_pattern(pattern_id, dualsense: ds.pydualsense):
+    # Create a stop event for the thread
+    stop_event = threading.Event()
+    vibration_thread = None
+
+    if pattern_id == 0:
+        dualsense.setLeftMotor(0)
+        dualsense.setRightMotor(0)
+    elif pattern_id == 1:
+        dualsense.setLeftMotor(128)
+        dualsense.setRightMotor(128)
+    elif pattern_id == 2:
+        dualsense.setLeftMotor(255)
+        dualsense.setRightMotor(255)
+    elif pattern_id == 3:
+        # Start sine wave vibration in a separate thread
+        vibration_thread = threading.Thread(
+            target=sine_wave_vibration,
+            args=(dualsense, stop_event)
+        )
+        vibration_thread.start()
+    
+    return stop_event, vibration_thread
+
+# Modify the stop_vibration_pattern function
+def stop_vibration_pattern(dualsense: ds.pydualsense, stop_event=None, vibration_thread=None):
+    if stop_event:
+        stop_event.set()
+    if vibration_thread:
+        vibration_thread.join()
+    dualsense.setLeftMotor(0)
+    dualsense.setRightMotor(0)
+
+
+# collect the data from the controller and save to the csv file
 def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_pattern=vib_pattern, rule1=rule1, label=0, person_id=0, pattern_id=0):
     print(f"Starting data collection with parameters:")
     print(f"Label: {label}, Person ID: {person_id}, Pattern ID: {pattern_id}")
