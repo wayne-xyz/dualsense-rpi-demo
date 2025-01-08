@@ -21,7 +21,7 @@ sampling/polling rate from controller: 250hz , hid is 1000hz
 ## Source
 
 Development 
-- [pydualsense](https://github.com/flok/pydualsense)(preferred)
+- [pydualsense](https://github.com/flok/pydualsense)(preferred)(not working on macos)
 - [hidapi](https://github.com/libusb/hidapi)
 - [dualsense-controller-python](https://github.com/yesbotics/dualsense-controller-python)
 
@@ -29,6 +29,14 @@ Data of HID
 - [Sony DualSense](https://controllers.fandom.com/wiki/Sony_DualSense)
 - [dualsense](https://github.com/nondebug/dualsense)
 
+## For supportting the macos
+edit the hidapi.py from https://github.com/flok/pydualsense  to include the darwin platform
+
+```
+# edit the platform to include darwin by Wayne J 2025-01-06 custom edit
+if platform.startswith('linux') or platform.startswith('darwin'):
+    ffi.cdef("""
+```
 
 
 ## Prerequisites 
