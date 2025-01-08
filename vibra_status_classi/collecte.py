@@ -9,6 +9,7 @@ import logging
 import csv
 import pydualsense as ds
 import numpy as np
+import datetime
 
 # print env info:
 import sys
@@ -31,6 +32,7 @@ data_fields=[
 
 # data collection rule1: 
 rule1={
+    "rule_name":"rule1",
     "category_rows": 1000, # 1000 rows per vibration status and label
     "session_rows":50, # for the svm model, divide the data into session with 50 rows in each category
     "polling_interval":1 # polling the data every 1ms
@@ -49,7 +51,7 @@ vib_pattern={
 }
 
 
-CSV_FILE_NAME="inertial_data_1.csv"
+CSV_FILE_NAME="inertial_data"
 
 def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_pattern=vib_pattern, rule1=rule1, label=0, person_id=0, pattern_id=0):
     print(f"Starting data collection with parameters:")
@@ -62,10 +64,11 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
     # Get parameters from rule1
     category_rows = rule1["category_rows"]
     polling_interval = rule1["polling_interval"] / 1000.0  # Convert ms to seconds
-    
+    rule_name = rule1["rule_name"]
+
     try:
-        # Initialize numpy array to store all data at once
-        data_array = np.zeros((category_rows, len(data_fields)))
+        # Use list instead of numpy array to handle mixed data types
+        data_rows = []
         row_index = 0
         
         print(f"\nCollecting {category_rows} samples...")
@@ -82,7 +85,7 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
             
             # Create data row
             data_row = [
-                time.time(),  # timestamp
+                datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'),  # timestamp
                 acc.X,        # accelerometer X
                 acc.Y,        # accelerometer Y
                 acc.Z,        # accelerometer Z
@@ -94,8 +97,8 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
                 person_id     # person ID
             ]
             
-            # Store in numpy array
-            data_array[row_index] = data_row
+            # Append to list instead of numpy array
+            data_rows.append(data_row)
             
             # Print progress every 100 samples
             if row_index % 100 == 0:
@@ -112,7 +115,9 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
         print("\nData collection completed. Saving to CSV...")
         
         # Save all data at once
+        csv_file_name = f"{csv_file_name}_{rule_name}.csv"
         file_exists = os.path.isfile(csv_file_name)
+        
         with open(csv_file_name, mode='a', newline='') as file:
             writer = csv.writer(file)
             
@@ -121,7 +126,7 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
                 writer.writerow(data_fields)
             
             # Write all data at once
-            writer.writerows(data_array)
+            writer.writerows(data_rows)
         
         print(f"Successfully saved {category_rows} samples to {csv_file_name}")
         
@@ -130,12 +135,13 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
         # Save partial data if interrupted
         if row_index > 0:
             print(f"Saving {row_index} collected samples...")
+            csv_file_name = f"{csv_file_name}_{rule_name}.csv"
             file_exists = os.path.isfile(csv_file_name)
             with open(csv_file_name, mode='a', newline='') as file:
                 writer = csv.writer(file)
                 if not file_exists:
                     writer.writerow(data_fields)
-                writer.writerows(data_array[:row_index])
+                writer.writerows(data_rows[:row_index])
             print(f"Partial data saved to {csv_file_name}")
             
     except Exception as e:
