@@ -141,6 +141,18 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
         print(f"\nCollecting {category_rows} samples...")
         print(f"Polling interval: {polling_interval*1000:.1f}ms")
         print("Data will be saved after collection is complete...")
+
+
+
+        
+
+        # start vibration pattern
+        print(f"Starting vibration pattern {pattern_id}")
+        stop_event, vibration_thread = start_vibration_pattern(pattern_id, dualsense)
+
+
+
+
         
         # Main data collection loop
         while row_index < category_rows:
@@ -200,6 +212,12 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
         
         print(f"Successfully saved {category_rows} samples to {csv_file_name}")
         
+        # stop vibration pattern
+        print(f"Stopping vibration pattern {pattern_id}")
+        stop_vibration_pattern(dualsense, stop_event, vibration_thread)
+        
+        
+
     except KeyboardInterrupt:
         print("\nData collection interrupted by user")
         # Save partial data if interrupted
