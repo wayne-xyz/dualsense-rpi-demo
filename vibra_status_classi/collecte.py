@@ -47,7 +47,7 @@ vib_pattern={
     1:"half_intensity", # 128
     2:"full_intensity", # 255
     3:"sin_wave",# ramp up from 0 to 255 and down from 255 to 0 in 1000ms,1hz
-    4:"50hz",
+    4:"low_intensity", # 10
     5:"rhythmic_pulses", # 255 1ms 0 1ms ...
     6:"frequency_modulation", # from 100hz to 200hz adjustable wave 
     7:"amplitude_modulation", # from the 0 to 100% adjustable wave  of the vibration
@@ -106,6 +106,9 @@ def start_vibration_pattern(pattern_id, dualsense: ds.pydualsense):
             args=(dualsense, stop_event)
         )
         vibration_thread.start() # start the vibration thread
+    elif pattern_id == 4:
+        dualsense.setLeftMotor(10)
+        dualsense.setRightMotor(10)
     
     return stop_event, vibration_thread
 
@@ -215,7 +218,7 @@ def collect_data(csv_file_name=CSV_FILE_NAME, data_fields=data_fields, vib_patte
         # stop vibration pattern
         print(f"Stopping vibration pattern {pattern_id}")
         stop_vibration_pattern(dualsense, stop_event, vibration_thread)
-        
+
         
 
     except KeyboardInterrupt:
