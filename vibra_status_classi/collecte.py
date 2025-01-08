@@ -105,16 +105,16 @@ def start_vibration_pattern(pattern_id, dualsense: ds.pydualsense):
             target=sine_wave_vibration,
             args=(dualsense, stop_event)
         )
-        vibration_thread.start()
+        vibration_thread.start() # start the vibration thread
     
     return stop_event, vibration_thread
 
 # Modify the stop_vibration_pattern function
 def stop_vibration_pattern(dualsense: ds.pydualsense, stop_event=None, vibration_thread=None):
     if stop_event:
-        stop_event.set()
+        stop_event.set() # stop the vibration thread
     if vibration_thread:
-        vibration_thread.join()
+        vibration_thread.join() # wait for the vibration thread to finish
     dualsense.setLeftMotor(0)
     dualsense.setRightMotor(0)
 
