@@ -51,6 +51,7 @@ vib_pattern={
     5:"rhythmic_pulses", # 255 1ms 0 1ms ...
     6:"frequency_modulation", # from 100hz to 200hz adjustable wave 
     7:"amplitude_modulation", # from the 0 to 100% adjustable wave  of the vibration
+    8:"minimum_intensity", # 1 
 }
 
 
@@ -109,6 +110,9 @@ def start_vibration_pattern(pattern_id, dualsense: ds.pydualsense):
     elif pattern_id == 4:
         dualsense.setLeftMotor(10)
         dualsense.setRightMotor(10)
+    elif pattern_id == 8:
+        dualsense.setLeftMotor(1)
+        dualsense.setRightMotor(1)
     
     return stop_event, vibration_thread
 
