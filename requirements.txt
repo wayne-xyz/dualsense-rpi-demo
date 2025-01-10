@@ -1,9 +1,12 @@
-
-
 # Python packages
 pydualsense # dependencies hidapi-usb
 pyqtgraph
 scipy
-numpy
+numpy==2.0
 matplotlib
 pyqt5
+umap-learn
+scikit-learn
+seaborn
+pandas
+    
