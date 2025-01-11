@@ -303,16 +303,72 @@ def main():
 
 if __name__ == "__main__":
     print("========start collect data========")
-    #  using the command line argument to get the label, person_id, pattern_id
-    # example: python collecte.py --label 0 --person_id 0 --pattern_id 0 --test_controller_rt False
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--label", type=int, default=0)
-    parser.add_argument("--person_id", type=int, default=0)
-    parser.add_argument("--pattern_id", type=int, default=0)
-    parser.add_argument("--test_controller_rt", type=bool, default=False)
+    parser = argparse.ArgumentParser(description='Collect sensor data from PS5 controller')
+    
+    # Required arguments - no defaults
+    parser.add_argument("--label", 
+                       type=int, 
+                       required=True,
+                       choices=[0, 1],
+                       help="0: on table, 1: in hand")
+    
+    parser.add_argument("--person_id", 
+                       type=int,
+                       required=True,
+                       help="ID of the person (0-9)")
+    
+    parser.add_argument("--pattern_id", 
+                       type=int,
+                       required=True,
+                       choices=[0, 1, 2, 3, 4, 5, 6, 7, 8],
+                       help="""Vibration pattern ID:
+                       0: no vibration
+                       1: half intensity
+                       2: full intensity
+                       3: sine wave
+                       4: low intensity
+                       5: rhythmic pulses
+                       6: frequency modulation
+                       7: amplitude modulation
+                       8: minimum intensity""")
+    
+    parser.add_argument("--test_controller_rt", 
+                       type=str,
+                       required=True,
+                       choices=['True', 'False'],
+                       help="True: test controller real-time, False: collect data")
+    
     args = parser.parse_args()
-    if args.test_controller_rt:
+    
+    # Convert test_controller_rt string to boolean
+    test_controller_rt = args.test_controller_rt.lower() == 'true'
+    
+    if not args.label in [0, 1]:
+        parser.error("Label must be 0 (on table) or 1 (in hand)")
+    
+    if not 0 <= args.person_id <= 9:
+        parser.error("Person ID must be between 0 and 9")
+    
+    if not args.pattern_id in range(9):
+        parser.error("Pattern ID must be between 0 and 8")
+    
+    print("\nParameters:")
+    print(f"Label: {args.label} ({'on table' if args.label == 0 else 'in hand'})")
+    print(f"Person ID: {args.person_id}")
+    print(f"Pattern ID: {args.pattern_id} ({vib_pattern[args.pattern_id]})")
+    print(f"Test Controller: {test_controller_rt}")
+    
+    # Confirm with user
+    confirm = input("\nProceed with these parameters? (y/n): ")
+    if confirm.lower() != 'y':
+        print("Aborted by user")
+        exit()
+    
+    if test_controller_rt:
         test_controller_rt()
     else:
-        collect_data(label=args.label, person_id=args.person_id, pattern_id=args.pattern_id)
+        collect_data(label=args.label, 
+                    person_id=args.person_id, 
+                    pattern_id=args.pattern_id)
+    
     print("========end collect data========")
