@@ -104,7 +104,7 @@ class AccelerometerPlotWindow(QMainWindow):
     
     def setup_ui(self):
         self.setWindowTitle("LRA Investigation Tool")
-        self.setGeometry(100, 100, 1000, 600)  # Reduced window size
+        self.setGeometry(100, 100, 1000, 800)  # Increased height for two plots
         
         # Create main widget and layout
         main_widget = QWidget()
@@ -146,7 +146,16 @@ class AccelerometerPlotWindow(QMainWindow):
         self.start_stop_btn.clicked.connect(self.toggle_data_collection)
         control_layout.addWidget(self.start_stop_btn)
         
+        # Plot switch button
+        self.plot_switch_btn = QPushButton("Show Magnitude")
+        self.plot_switch_btn.clicked.connect(self.toggle_plot_view)
+        control_layout.addWidget(self.plot_switch_btn)
+        
         layout.addWidget(control_widget)
+        
+        # Create plots container
+        plots_widget = QWidget()
+        plots_layout = QVBoxLayout(plots_widget)
         
         # XYZ Accelerometer plot
         self.time_plot = pg.PlotWidget()
@@ -154,25 +163,46 @@ class AccelerometerPlotWindow(QMainWindow):
         self.time_plot.setLabel('bottom', 'Time', units='s')
         self.time_plot.addLegend()
         self.time_plot.showGrid(x=True, y=True)
+        plots_layout.addWidget(self.time_plot)
         
-        layout.addWidget(self.time_plot)
+        # Magnitude plot
+        self.magnitude_plot = pg.PlotWidget()
+        self.magnitude_plot.setLabel('left', 'Magnitude', units='m/s²')
+        self.magnitude_plot.setLabel('bottom', 'Time', units='s')
+        self.magnitude_plot.showGrid(x=True, y=True)
+        plots_layout.addWidget(self.magnitude_plot)
         
-        # Initialize curves
+        # Initially hide magnitude plot
+        self.magnitude_plot.hide()
+        
+        layout.addWidget(plots_widget)
+        
+        # Initialize curves for XYZ plot
         self.time_curves = {
             'x': self.time_plot.plot(pen='r', name='X-axis'),
             'y': self.time_plot.plot(pen='g', name='Y-axis'),
             'z': self.time_plot.plot(pen='b', name='Z-axis')
         }
         
+        # Initialize curve for magnitude plot
+        self.magnitude_curve = self.magnitude_plot.plot(
+            pen=pg.mkPen('w', width=2),  # White, thicker line
+            name='Magnitude'
+        )
+        
         # Data buffers
-        self.buffer_size = 500
+        self.buffer_size = 250
         self.data_buffers = {
             't': np.zeros(self.buffer_size),
             'x': np.zeros(self.buffer_size),
             'y': np.zeros(self.buffer_size),
-            'z': np.zeros(self.buffer_size)
+            'z': np.zeros(self.buffer_size),
+            'magnitude': np.zeros(self.buffer_size)
         }
         self.data_index = 0
+        
+        # Track current view state
+        self.showing_xyz = True
     
     def setup_data_collection(self):
         self.data_collector = DataCollector(self.dualsense)
@@ -182,25 +212,39 @@ class AccelerometerPlotWindow(QMainWindow):
         self.vibration_controller = VibrationController(self.dualsense)
         self.pattern_combo.currentTextChanged.connect(self.change_vibration_pattern)
     
+    def calculate_magnitude(self, x, y, z):
+        """Calculate the magnitude from three axis components"""
+        return np.sqrt(x**2 + y**2 + z**2)
+    
     def update_plot(self, t, x, y, z):
-        # Update time domain buffers
+        # Update buffers
         self.data_buffers['t'][self.data_index] = t
         self.data_buffers['x'][self.data_index] = x
         self.data_buffers['y'][self.data_index] = y
         self.data_buffers['z'][self.data_index] = z
         
+        # Calculate magnitude
+        magnitude = self.calculate_magnitude(x, y, z)
+        self.data_buffers['magnitude'][self.data_index] = magnitude
+        
         self.data_index = (self.data_index + 1) % self.buffer_size
         
-        # Update XYZ plot
-        for axis in ['x', 'y', 'z']:
-            self.time_curves[axis].setData(
+        # Update only the visible plot
+        if self.showing_xyz:
+            for axis in ['x', 'y', 'z']:
+                self.time_curves[axis].setData(
+                    self.data_buffers['t'],
+                    self.data_buffers[axis]
+                )
+            if self.data_index % 50 == 0:
+                self.time_plot.enableAutoRange()
+        else:
+            self.magnitude_curve.setData(
                 self.data_buffers['t'],
-                self.data_buffers[axis]
+                self.data_buffers['magnitude']
             )
-        
-        # Auto-range occasionally
-        if self.data_index % 50 == 0:
-            self.time_plot.enableAutoRange()
+            if self.data_index % 50 == 0:
+                self.magnitude_plot.enableAutoRange()
     
     def change_vibration_pattern(self, pattern):
         if pattern == 'none':
@@ -225,6 +269,21 @@ class AccelerometerPlotWindow(QMainWindow):
         else:
             self.data_collector.start()
             self.start_stop_btn.setText("Stop")
+    
+    def toggle_plot_view(self):
+        """Switch between XYZ and magnitude plots"""
+        if self.showing_xyz:
+            # Switch to magnitude view
+            self.time_plot.hide()
+            self.magnitude_plot.show()
+            self.plot_switch_btn.setText("Show XYZ")
+            self.showing_xyz = False
+        else:
+            # Switch to XYZ view
+            self.magnitude_plot.hide()
+            self.time_plot.show()
+            self.plot_switch_btn.setText("Show Magnitude")
+            self.showing_xyz = True
     
     def closeEvent(self, event):
         self.data_collector.stop()
