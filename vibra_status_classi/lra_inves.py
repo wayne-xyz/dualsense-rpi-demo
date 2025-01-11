@@ -121,6 +121,24 @@ class AccelerometerPlotWindow(QMainWindow):
         control_layout.addWidget(QLabel("Vibration Pattern:"))
         control_layout.addWidget(self.pattern_combo)
         
+        # Sine wave controls
+        sine_control = QWidget()
+        sine_layout = QVBoxLayout(sine_control)
+        
+        # Frequency control
+        self.frequency_spin = QSpinBox()
+        self.frequency_spin.setRange(1, 100)  # 1-100 Hz
+        self.frequency_spin.setValue(1)  # Default 1 Hz
+        self.frequency_spin.setSuffix(" Hz")
+        sine_layout.addWidget(QLabel("Sine Wave Frequency:"))
+        sine_layout.addWidget(self.frequency_spin)
+        
+        # Initially hide sine controls
+        sine_control.setVisible(False)
+        self.sine_control_widget = sine_control  # Store reference
+        
+        control_layout.addWidget(sine_control)
+        
         # Pulse timing controls
         pulse_control = QWidget()
         pulse_layout = QVBoxLayout(pulse_control)
@@ -203,6 +221,11 @@ class AccelerometerPlotWindow(QMainWindow):
         
         # Track current view state
         self.showing_xyz = True
+        
+        # Connect frequency change signal
+        self.frequency_spin.valueChanged.connect(self.update_sine_frequency)
+        # Connect pattern change to control visibility
+        self.pattern_combo.currentTextChanged.connect(self.update_control_visibility)
     
     def setup_data_collection(self):
         self.data_collector = DataCollector(self.dualsense)
@@ -246,19 +269,49 @@ class AccelerometerPlotWindow(QMainWindow):
             if self.data_index % 50 == 0:
                 self.magnitude_plot.enableAutoRange()
     
+    def update_control_visibility(self, pattern):
+        """Show/hide controls based on selected pattern"""
+        # Show/hide sine controls
+        self.sine_control_widget.setVisible(pattern == 'sine')
+        
+        # Show/hide pulse controls
+        pulse_controls_visible = pattern == 'pulse'
+        self.pulse_on_spin.parent().setVisible(pulse_controls_visible)
+        
+        # Update vibration pattern
+        self.change_vibration_pattern(pattern)
+    
+    def update_sine_frequency(self, value):
+        """Update sine wave frequency when spinbox value changes"""
+        if self.pattern_combo.currentText() == 'sine':
+            self.vibration_controller.set_pattern(
+                'sine',
+                frequency=value
+            )
+    
     def change_vibration_pattern(self, pattern):
         if pattern == 'none':
             self.vibration_controller.stop()
         else:
-            # Get pulse timing values if in pulse mode
-            pulse_on = self.pulse_on_spin.value() / 1000.0  # Convert to seconds
-            pulse_off = self.pulse_off_spin.value() / 1000.0  # Convert to seconds
+            if pattern == 'pulse':
+                # Get pulse timing values
+                pulse_on = self.pulse_on_spin.value() / 1000.0
+                pulse_off = self.pulse_off_spin.value() / 1000.0
+                self.vibration_controller.set_pattern(
+                    pattern,
+                    pulse_on_time=pulse_on,
+                    pulse_off_time=pulse_off
+                )
+            elif pattern == 'sine':
+                # Get frequency value
+                frequency = self.frequency_spin.value()
+                self.vibration_controller.set_pattern(
+                    pattern,
+                    frequency=frequency
+                )
+            else:  # constant pattern
+                self.vibration_controller.set_pattern(pattern)
             
-            self.vibration_controller.set_pattern(
-                pattern,
-                pulse_on_time=pulse_on,
-                pulse_off_time=pulse_off
-            )
             if not self.vibration_controller.isRunning():
                 self.vibration_controller.start()
     
