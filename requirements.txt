@@ -9,4 +9,5 @@ umap-learn
 scikit-learn
 seaborn
 pandas
-    
+pyaudio
+ipywidgets

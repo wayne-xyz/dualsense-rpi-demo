@@ -58,6 +58,7 @@ if platform.startswith('linux') or platform.startswith('darwin'):
 - Python 3.11
 - Preparing the hidapi 
 - Install pydualsense
+- Install: brew install portaudio 
 
 
 # Environment
