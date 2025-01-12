@@ -8,8 +8,8 @@ Demos for Dualsense controller and Raspberry Pi 3B+
 And for windows 
 
 ## TODO
-- [ ] Limitation of the vibration frequncy 
-- [ ] Limitation of the vibration amplitude 
+- [X] Limitation of the vibration frequncy 
+- [ ] Sound play and LRA vibration mimic 
 - [ ] Limitation frequency of the speaker's output
 - [ ] Limitation frequency of the mic's input
 - [ ] Vibrate when identify the status of the controller
