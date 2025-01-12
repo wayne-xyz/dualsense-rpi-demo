@@ -18,7 +18,7 @@ class DataCollector(QThread):
     """Thread for high-frequency data collection"""
     data_ready = pyqtSignal(float, float, float, float)  # time, x, y, z
     
-    def __init__(self, dualsense, sample_rate=500):
+    def __init__(self, dualsense, sample_rate=250):
         super().__init__()
         self.dualsense = dualsense
         self.running = False
@@ -245,7 +245,7 @@ class AccelerometerPlotWindow(QMainWindow):
         # FFT update timer
         self.fft_timer = QTimer()
         self.fft_timer.timeout.connect(self.update_frequency_display)
-        self.fft_timer.start(500)  # Update every 500ms
+        self.fft_timer.start(250)  # Update every 250ms
     
     def setup_data_collection(self):
         self.data_collector = DataCollector(self.dualsense)
@@ -278,6 +278,7 @@ class AccelerometerPlotWindow(QMainWindow):
         # Find dominant frequency (excluding DC component)
         idx = np.argmax(yf[1:]) + 1  # Skip first element (DC)
         dominant_frequency = xf[idx]
+
         
         # Only return if amplitude is significant
         if yf[idx] > 0.5:  # Threshold for noise rejection
@@ -302,7 +303,7 @@ class AccelerometerPlotWindow(QMainWindow):
         freq_text += f"X: {freqs['x']:.1f} Hz\n"
         freq_text += f"Y: {freqs['y']:.1f} Hz\n"
         freq_text += f"Z: {freqs['z']:.1f} Hz\n"
-        freq_text += f"Magnitude: {freqs['mag']:.1f} Hz"
+        # freq_text += f"Magnitude: {freqs['mag']:.1f} Hz"
         
         self.freq_label.setText(freq_text)
     
