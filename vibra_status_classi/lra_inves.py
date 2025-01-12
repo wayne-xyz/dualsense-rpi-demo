@@ -9,6 +9,11 @@ import pyqtgraph as pg
 import pydualsense as ds
 from scipy.fft import fft, fftfreq
 
+
+# polling rate 250hz, 4ms per sample
+# based on the x,y,z values, calculate the magnitude and ftt then get the frequency at constant vibration
+
+
 class DataCollector(QThread):
     """Thread for high-frequency data collection"""
     data_ready = pyqtSignal(float, float, float, float)  # time, x, y, z
@@ -169,6 +174,16 @@ class AccelerometerPlotWindow(QMainWindow):
         self.plot_switch_btn.clicked.connect(self.toggle_plot_view)
         control_layout.addWidget(self.plot_switch_btn)
         
+        # Add frequency display label
+        self.freq_label = QLabel("Dominant Frequency: -- Hz")
+        self.freq_label.setStyleSheet("""
+            QLabel { 
+                font-size: 14px;
+                color: palette(text);
+            }
+        """)
+        control_layout.addWidget(self.freq_label)
+        
         layout.addWidget(control_widget)
         
         # Create plots container
@@ -209,7 +224,7 @@ class AccelerometerPlotWindow(QMainWindow):
         )
         
         # Data buffers
-        self.buffer_size = 250
+        self.buffer_size = 250  # 250 samples = 1 second at 250Hz
         self.data_buffers = {
             't': np.zeros(self.buffer_size),
             'x': np.zeros(self.buffer_size),
@@ -226,6 +241,11 @@ class AccelerometerPlotWindow(QMainWindow):
         self.frequency_spin.valueChanged.connect(self.update_sine_frequency)
         # Connect pattern change to control visibility
         self.pattern_combo.currentTextChanged.connect(self.update_control_visibility)
+        
+        # FFT update timer
+        self.fft_timer = QTimer()
+        self.fft_timer.timeout.connect(self.update_frequency_display)
+        self.fft_timer.start(500)  # Update every 500ms
     
     def setup_data_collection(self):
         self.data_collector = DataCollector(self.dualsense)
@@ -238,6 +258,53 @@ class AccelerometerPlotWindow(QMainWindow):
     def calculate_magnitude(self, x, y, z):
         """Calculate the magnitude from three axis components"""
         return np.sqrt(x**2 + y**2 + z**2)
+    
+    def calculate_fft(self, data):
+        """Calculate FFT and get the dominant frequency"""
+        if len(data) < self.buffer_size:
+            return 0.0
+            
+        # Apply window function to reduce spectral leakage
+        window = np.hanning(len(data))
+        windowed_data = data * window
+        
+        # Calculate FFT
+        N = len(data)
+        T = 1.0 / 250  # Sampling interval (250 Hz)
+        yf = fft(windowed_data)
+        xf = fftfreq(N, T)[:N//2]
+        yf = 2.0/N * np.abs(yf[0:N//2])
+        
+        # Find dominant frequency (excluding DC component)
+        idx = np.argmax(yf[1:]) + 1  # Skip first element (DC)
+        dominant_frequency = xf[idx]
+        
+        # Only return if amplitude is significant
+        if yf[idx] > 0.5:  # Threshold for noise rejection
+            return dominant_frequency
+        return 0.0
+    
+    def update_frequency_display(self):
+        """Update the frequency display label"""
+        if not self.data_collector.isRunning():
+            return
+            
+        # Calculate frequencies for each axis and magnitude
+        freqs = {
+            'x': self.calculate_fft(self.data_buffers['x']),
+            'y': self.calculate_fft(self.data_buffers['y']),
+            'z': self.calculate_fft(self.data_buffers['z']),
+            'mag': self.calculate_fft(self.data_buffers['magnitude'])
+        }
+        
+        # Format frequency display
+        freq_text = "Dominant Frequencies:\n"
+        freq_text += f"X: {freqs['x']:.1f} Hz\n"
+        freq_text += f"Y: {freqs['y']:.1f} Hz\n"
+        freq_text += f"Z: {freqs['z']:.1f} Hz\n"
+        freq_text += f"Magnitude: {freqs['mag']:.1f} Hz"
+        
+        self.freq_label.setText(freq_text)
     
     def update_plot(self, t, x, y, z):
         # Update buffers
