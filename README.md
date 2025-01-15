@@ -9,10 +9,10 @@ And for windows
 
 ## TODO
 - [X] Limitation of the vibration frequncy 
-- [ ] Sound play and LRA vibration mimic 
-- [ ] Limitation frequency of the speaker's output
-- [ ] Limitation frequency of the mic's input
-- [ ] Vibrate when identify the status of the controller
+- [X] Sound play and LRA vibration mimic 
+- [X] Limitation frequency of the speaker's output
+- [X] Limitation frequency of the mic's input
+- [X] Vibrate when identify the status of the controller
 
 ## Features data
 sampling/polling rate from controller: 250hz , hid is 1000hz
