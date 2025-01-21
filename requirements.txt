@@ -12,3 +12,4 @@ pandas
 pyaudio
 ipywidgets
 joblib
+librosa
