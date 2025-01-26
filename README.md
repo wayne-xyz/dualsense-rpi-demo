@@ -38,6 +38,11 @@ if platform.startswith('linux') or platform.startswith('darwin'):
     ffi.cdef("""
 ```
 
+## For supportting haptic enabliing switch for the pydualsense library
+- add the enable_haptic = True in the pydualsense.py 
+- add hatpic class in the pydualsense.py  
+- add the 0x00 and 0x03 to the outReport[1] which are the flags determing what changes this packet will perform
+
 
 ## Prerequisites 
 ### Windows
