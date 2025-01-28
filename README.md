@@ -38,6 +38,12 @@ if platform.startswith('linux') or platform.startswith('darwin'):
     ffi.cdef("""
 ```
 
+## For support the customer hidapi 
+```outreport[1]```
+the haptic UAC features 
+
+
+
 ## For supportting haptic enabliing switch for the pydualsense library
 - add the enable_haptic = True in the pydualsense.py 
 - add hatpic class in the pydualsense.py  
