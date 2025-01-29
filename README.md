@@ -43,6 +43,8 @@ the haptic UAC features
 
 ## HID commend table 
 ### Output table(USB)
+Source: https://controllers.fandom.com/wiki/Sony_DualSense 
+
 | Byte.Offset | Bit(s)       | Field                          | Description                                                   |
 |-------------|--------------|--------------------------------|---------------------------------------------------------------|
 | 0.0         | 0            | EnableRumbleEmulation          | Suggest halving rumble strength                               |
