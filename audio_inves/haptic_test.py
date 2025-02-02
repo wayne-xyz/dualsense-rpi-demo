@@ -51,7 +51,7 @@ def test_customer_output(k:int,v:int):
     dualsense.hid_customer.set_customer_setting(k,v)
     print(f"set the {k} to {v}")
 
-    time.sleep(5)
+
     for i in range(5, 0, -1):
         print(f"Time remaining: {i} seconds", end='\r')
         time.sleep(1)

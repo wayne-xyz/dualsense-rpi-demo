@@ -47,7 +47,7 @@ Source: https://controllers.fandom.com/wiki/Sony_DualSense
 
 | Byte.Offset | Bit(s)       | Field                          | Description                                                   |
 |-------------|--------------|--------------------------------|---------------------------------------------------------------|
-| 0.0         | 0            | EnableRumbleEmulation          | Suggest halving rumble strength                               |
+| 0.0         | 0            | EnableRumbleEmulation          | Emulation(Haptic), Suggest halving rumble strength                               |
 | 0.1         | 1            | UseRumbleNotHaptics            | Use rumble instead of haptics                                 |
 | 0.2         | 2            | AllowRightTriggerFFB           | Enable setting RightTriggerFFB                                |
 | 0.3         | 3            | AllowLeftTriggerFFB            | Enable setting LeftTriggerFFB                                 |
