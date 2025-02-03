@@ -85,3 +85,4 @@ if __name__ == "__main__":
 
 # start the haptic motor --customer_output 1 0x01
 
+#python haptic_test.py --customer_output 1 0x01
