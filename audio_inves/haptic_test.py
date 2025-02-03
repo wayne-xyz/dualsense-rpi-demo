@@ -83,4 +83,5 @@ if __name__ == "__main__":
             print(f"Error: Invalid input values - {str(e)}")
             sys.exit(1)
 
+# start the haptic motor --customer_output 1 0x01
 
