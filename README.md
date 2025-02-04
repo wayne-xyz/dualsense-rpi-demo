@@ -6,6 +6,7 @@ Resaerch by using the features from the Dualsense controlelr
 Investigation for the Dualsense controller based on the PC/Mac
 
 ## TODO
+- [ ] Dynamic triger features
 - [X] Limitation of the vibration frequncy 
 - [X] Sound play and LRA vibration mimic 
 - [X] Limitation frequency of the speaker's output
